@@ -47,6 +47,12 @@ return [
             'report' => false,
         ],
 
+        'shop' => [
+            'driver' => 'local',
+            'root' => storage_path('app/shop'),
+            'throw' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
