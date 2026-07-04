@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\CouponController;
+use App\Http\Controllers\Admin\LoginController as AdminLoginController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\SettingsController;
@@ -71,6 +72,14 @@ Route::middleware('auth:customer')->group(function (): void {
 Route::get('/mollie/redirect', function () {
     return redirect()->route('checkout.success');
 })->name('mollie.redirect');
+
+// Admin auth
+Route::middleware('guest')->prefix('admin')->name('admin.')->group(function (): void {
+    Route::get('login', [AdminLoginController::class, 'create'])->name('login');
+    Route::post('login', [AdminLoginController::class, 'store']);
+});
+
+Route::post('admin/logout', [AdminLoginController::class, 'destroy'])->name('admin.logout');
 
 // Admin
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function (): void {
