@@ -1,0 +1,26 @@
+<?php
+
+return [
+    'add_to_cart' => 'Voeg toe aan winkelwagen',
+    'remove_from_cart' => 'Verwijder',
+    'view_cart' => 'Winkelwagen bekijken',
+    'checkout' => 'Afrekenen',
+    'cart_empty' => 'Je winkelwagen is leeg.',
+    'coupon_code' => 'Kortingscode',
+    'apply_coupon' => 'Toepassen',
+    'coupon_invalid' => 'Deze kortingscode is niet geldig.',
+    'subtotal' => 'Subtotaal',
+    'discount' => 'Korting',
+    'total' => 'Totaal',
+    'pay_with_stripe' => 'Betaal met kaart (Stripe)',
+    'pay_with_mollie' => 'Betaal met iDEAL of kaart (Mollie)',
+    'order_success' => 'Bedankt voor je aankoop!',
+    'order_success_detail' => 'Je ontvangt een bevestigingsmail met downloadlinks.',
+    'order_cancelled' => 'Betaling geannuleerd.',
+    'order_cancelled_detail' => 'Je bestelling is niet voltooid. Je kunt het opnieuw proberen.',
+    'my_orders' => 'Mijn bestellingen',
+    'download' => 'Downloaden',
+    'order_number' => 'Bestelling #:id',
+    'paid_on' => 'Betaald op :date',
+    'in_cart' => 'In winkelwagen',
+];
