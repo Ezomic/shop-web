@@ -48,7 +48,7 @@ Route::middleware('guest:customer')->group(function (): void {
     Route::get('/register', [RegisterController::class, 'create'])->name('register');
     Route::post('/register', [RegisterController::class, 'store']);
     Route::get('/login', [LoginController::class, 'create'])->name('login');
-    Route::post('/login', [LoginController::class, 'store']);
+    Route::post('/login', [LoginController::class, 'store'])->middleware('throttle:login');
     Route::get('/forgot-password', [ForgotPasswordController::class, 'create'])->name('password.request');
     Route::post('/forgot-password', [ForgotPasswordController::class, 'store'])->name('password.email');
     Route::get('/reset-password/{token}', [ResetPasswordController::class, 'create'])->name('password.reset');
@@ -76,7 +76,7 @@ Route::get('/mollie/redirect', function () {
 // Admin auth
 Route::middleware('guest')->prefix('admin')->name('admin.')->group(function (): void {
     Route::get('login', [AdminLoginController::class, 'create'])->name('login');
-    Route::post('login', [AdminLoginController::class, 'store']);
+    Route::post('login', [AdminLoginController::class, 'store'])->middleware('throttle:login');
 });
 
 Route::post('admin/logout', [AdminLoginController::class, 'destroy'])->name('admin.logout');
