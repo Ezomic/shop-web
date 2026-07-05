@@ -139,6 +139,7 @@ pages/
 4. **Webhook CSRF exclusion** — both `/webhooks/stripe` and `/webhooks/mollie` are in the `validateCsrfTokens` except list in `bootstrap/app.php`.
 5. **Translatable fields** — `Product::name` and `Product::description` resolve to the current locale automatically. To get a specific locale use `$product->getTranslation('name', 'en')`.
 6. **Admin seeded user** — `admin@shop.test` / `password` (run `php artisan db:seed`).
+7. **Login throttling** — both `POST /login` and `POST /admin/login` use the `throttle:login` limiter (5/min by IP), registered in `AppServiceProvider::boot()`.
 
 ## Linear
 
