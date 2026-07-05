@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\CouponController;
+use App\Http\Controllers\Admin\LoginController as AdminLoginController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\SettingsController;
@@ -47,7 +48,7 @@ Route::middleware('guest:customer')->group(function (): void {
     Route::get('/register', [RegisterController::class, 'create'])->name('register');
     Route::post('/register', [RegisterController::class, 'store']);
     Route::get('/login', [LoginController::class, 'create'])->name('login');
-    Route::post('/login', [LoginController::class, 'store']);
+    Route::post('/login', [LoginController::class, 'store'])->middleware('throttle:login');
     Route::get('/forgot-password', [ForgotPasswordController::class, 'create'])->name('password.request');
     Route::post('/forgot-password', [ForgotPasswordController::class, 'store'])->name('password.email');
     Route::get('/reset-password/{token}', [ResetPasswordController::class, 'create'])->name('password.reset');
@@ -71,6 +72,14 @@ Route::middleware('auth:customer')->group(function (): void {
 Route::get('/mollie/redirect', function () {
     return redirect()->route('checkout.success');
 })->name('mollie.redirect');
+
+// Admin auth
+Route::middleware('guest')->prefix('admin')->name('admin.')->group(function (): void {
+    Route::get('login', [AdminLoginController::class, 'create'])->name('login');
+    Route::post('login', [AdminLoginController::class, 'store'])->middleware('throttle:login');
+});
+
+Route::post('admin/logout', [AdminLoginController::class, 'destroy'])->name('admin.logout');
 
 // Admin
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function (): void {

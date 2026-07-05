@@ -12,7 +12,7 @@ class EnsureAdmin
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (! $request->user()) {
+        if (! $request->user('web')) {
             return redirect()->route('admin.login');
         }
 

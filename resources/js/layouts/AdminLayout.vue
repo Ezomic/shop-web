@@ -2,7 +2,7 @@
 import { Link, router } from '@inertiajs/vue3'
 
 function logout() {
-    router.post(route('logout'))
+    router.post(route('admin.logout'))
 }
 </script>
 
