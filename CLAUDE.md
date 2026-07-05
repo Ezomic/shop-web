@@ -131,6 +131,36 @@ pages/
   admin/coupons/   Index, Create, Edit
 ```
 
+## Environment variables
+
+| Variable | Purpose |
+|---|---|
+| `STRIPE_KEY` | Stripe publishable key |
+| `STRIPE_SECRET` | Stripe secret key — used server-side for Checkout Sessions and refunds |
+| `STRIPE_WEBHOOK_SECRET` | Signing secret used by `StripeWebhookController` to verify incoming webhooks |
+| `MOLLIE_KEY` | Mollie API key (test or live) |
+
+`Admin\SettingsController` can also write these to `.env` directly from `/admin/settings` and
+clears the config cache afterward — no server restart needed.
+
+## Testing
+
+```bash
+php artisan test
+php artisan test --filter=ProductTest
+```
+
+No feature tests exist yet beyond the default Laravel skeleton (`tests/Feature`, `tests/Unit`).
+When adding coverage, prioritize:
+
+- `CreateOrderAction` / `CompleteOrderAction` — order + download creation logic
+- `CartService::totals()` — coupon discount math (percent vs fixed, expiry, max uses)
+- Webhook controllers — signature validation and idempotency (`CompleteOrderAction` no-ops if
+  the order is already paid)
+- `ProcessDownloadAction` — signed URL rejection, download counting
+
+Use `RefreshDatabase` and factories; no database mocking, per project convention.
+
 ## Key gotchas
 
 1. **Two separate auth guards** — customer login uses `auth:customer`, admin login uses `auth` (web). Never mix them.
