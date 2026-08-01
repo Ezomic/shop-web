@@ -11,6 +11,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['product_id', 'disk', 'path', 'original_filename', 'size'])]
 class ProductFile extends Model
 {
+    /**
+     * @return BelongsTo<Product, $this>
+     */
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);

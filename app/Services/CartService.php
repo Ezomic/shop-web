@@ -6,7 +6,7 @@ namespace App\Services;
 
 use App\Models\Coupon;
 use App\Models\Product;
-use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Session;
 
 class CartService
@@ -29,6 +29,9 @@ class CartService
         Session::put(self::KEY, $cart);
     }
 
+    /**
+     * @return Collection<int, Product>
+     */
     public function contents(): Collection
     {
         $ids = array_keys($this->rawCart());
@@ -72,20 +75,31 @@ class CartService
             return null;
         }
 
-        return Coupon::find($id);
+        return Coupon::find((int) $id);
     }
 
+    /**
+     * @return array{subtotal: int, discount: int, total: int, coupon: Coupon|null}
+     */
     public function totals(): array
     {
         $products = $this->contents();
-        $subtotal = $products->sum('price');
+        $subtotal = $products->sum(fn (Product $product): int => $product->price);
         $coupon = $this->coupon();
         $discount = $coupon ? $coupon->discountFor($subtotal) : 0;
         $total = max(0, $subtotal - $discount);
 
-        return compact('subtotal', 'discount', 'total', 'coupon');
+        return [
+            'subtotal' => $subtotal,
+            'discount' => $discount,
+            'total' => $total,
+            'coupon' => $coupon,
+        ];
     }
 
+    /**
+     * @return array<int, int>
+     */
     private function rawCart(): array
     {
         return Session::get(self::KEY, []);

@@ -17,6 +17,9 @@ class Download extends Model
         return ['last_downloaded_at' => 'datetime'];
     }
 
+    /**
+     * @return BelongsTo<OrderItem, $this>
+     */
     public function orderItem(): BelongsTo
     {
         return $this->belongsTo(OrderItem::class);

@@ -8,7 +8,7 @@ use App\Actions\CompleteOrderAction;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Stripe\Event;
+use Stripe\Checkout\Session;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\Stripe;
 use Stripe\Webhook;
@@ -29,9 +29,10 @@ class StripeWebhookController extends Controller
             return response('Invalid signature', 400);
         }
 
-        if ($event->type === 'checkout.session.completed') {
-            $session = $event->data->object;
-            $order = Order::find($session->metadata['order_id']);
+        $session = $event->data->object;
+
+        if ($event->type === 'checkout.session.completed' && $session instanceof Session) {
+            $order = Order::find((int) $session->metadata['order_id']);
 
             if ($order) {
                 $complete->handle($order, $session->payment_method_types[0] ?? null);

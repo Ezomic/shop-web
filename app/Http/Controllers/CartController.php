@@ -16,7 +16,7 @@ class CartController extends Controller
 
     public function add(Request $request): RedirectResponse
     {
-        $product = Product::published()->findOrFail($request->input('product_id'));
+        $product = Product::published()->findOrFail((int) $request->input('product_id'));
         $this->cart->add($product);
 
         return back();
@@ -33,7 +33,7 @@ class CartController extends Controller
     {
         $request->validate(['code' => ['required', 'string']]);
 
-        $coupon = $this->cart->applyCoupon($request->string('code'));
+        $coupon = $this->cart->applyCoupon($request->string('code')->toString());
 
         if (! $coupon) {
             return response()->json(['error' => __('shop.coupon_invalid')], 422);

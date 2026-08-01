@@ -25,6 +25,9 @@ class Customer extends Authenticatable implements MustVerifyEmail
         ];
     }
 
+    /**
+     * @return HasMany<Order, $this>
+     */
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);

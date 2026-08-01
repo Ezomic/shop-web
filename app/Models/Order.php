@@ -4,11 +4,28 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property int $id
+ * @property int $customer_id
+ * @property int|null $coupon_id
+ * @property string $status
+ * @property string $currency
+ * @property int $subtotal
+ * @property int $discount
+ * @property int $total
+ * @property string $payment_provider
+ * @property string|null $payment_id
+ * @property string|null $payment_method
+ * @property CarbonImmutable|null $paid_at
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ */
 #[Fillable([
     'customer_id', 'coupon_id', 'status', 'currency',
     'subtotal', 'discount', 'total',
@@ -21,16 +38,25 @@ class Order extends Model
         return ['paid_at' => 'datetime'];
     }
 
+    /**
+     * @return BelongsTo<Customer, $this>
+     */
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
     }
 
+    /**
+     * @return BelongsTo<Coupon, $this>
+     */
     public function coupon(): BelongsTo
     {
         return $this->belongsTo(Coupon::class);
     }
 
+    /**
+     * @return HasMany<OrderItem, $this>
+     */
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
