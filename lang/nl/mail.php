@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 return [
     'order_paid_subject' => 'Jouw bestelling #:id is bevestigd',
     'order_paid_heading' => 'Jouw aankoop is bevestigd!',

@@ -7,6 +7,8 @@ namespace App\Services;
 use App\Models\Order;
 use Mollie\Laravel\Facades\Mollie;
 use Stripe\Checkout\Session as StripeSession;
+use Stripe\PaymentIntent;
+use Stripe\Refund;
 use Stripe\Stripe;
 
 class PaymentService
@@ -30,7 +32,7 @@ class PaymentService
             'mode' => 'payment',
             'success_url' => route('checkout.success').'?session_id={CHECKOUT_SESSION_ID}',
             'cancel_url' => route('checkout.cancel'),
-            'metadata' => ['order_id' => $order->id],
+            'metadata' => ['order_id' => (string) $order->id],
         ]);
 
         $order->update(['payment_id' => $session->id]);
@@ -48,7 +50,7 @@ class PaymentService
             'description' => 'Order #'.$order->id,
             'redirectUrl' => route('mollie.redirect'),
             'webhookUrl' => route('webhooks.mollie'),
-            'metadata' => ['order_id' => $order->id],
+            'metadata' => ['order_id' => (string) $order->id],
         ]);
 
         $order->update(['payment_id' => $payment->id]);
@@ -60,9 +62,15 @@ class PaymentService
     {
         Stripe::setApiKey(config('services.stripe.secret'));
 
-        $session = StripeSession::retrieve($order->payment_id);
+        $session = StripeSession::retrieve((string) $order->payment_id);
+        $paymentIntent = $session->payment_intent;
+        $paymentIntentId = $paymentIntent instanceof PaymentIntent
+            ? $paymentIntent->id
+            : $paymentIntent;
 
-        \Stripe\Refund::create(['payment_intent' => $session->payment_intent]);
+        abort_if(! is_string($paymentIntentId), 500, 'Stripe session has no payment intent to refund.');
+
+        Refund::create(['payment_intent' => $paymentIntentId]);
 
         $order->update(['status' => 'refunded']);
     }

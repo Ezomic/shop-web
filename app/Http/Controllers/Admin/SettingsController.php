@@ -33,13 +33,15 @@ class SettingsController extends Controller
 
         $env = file_get_contents(base_path('.env'));
 
+        abort_if($env === false, 500, 'Unable to read the environment file.');
+
         foreach ([
-            'STRIPE_SECRET' => $request->input('stripe_secret'),
-            'STRIPE_WEBHOOK_SECRET' => $request->input('stripe_webhook_secret'),
-            'MOLLIE_KEY' => $request->input('mollie_key'),
+            'STRIPE_SECRET' => $request->string('stripe_secret')->toString(),
+            'STRIPE_WEBHOOK_SECRET' => $request->string('stripe_webhook_secret')->toString(),
+            'MOLLIE_KEY' => $request->string('mollie_key')->toString(),
         ] as $key => $value) {
-            if ($value !== null) {
-                $env = preg_replace("/^{$key}=.*/m", "{$key}={$value}", $env);
+            if ($value !== '') {
+                $env = preg_replace("/^{$key}=.*/m", "{$key}={$value}", $env) ?? $env;
             }
         }
 

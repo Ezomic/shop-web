@@ -51,7 +51,7 @@ class OrderController extends Controller
                     'id' => $item->id,
                     'product_name' => $item->product_name,
                     'price' => $item->price,
-                    'downloads' => $item->download?->download_count ?? 0,
+                    'downloads' => $item->download->download_count ?? 0,
                 ]),
             ],
         ]);

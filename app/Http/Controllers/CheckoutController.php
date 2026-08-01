@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\CompleteOrderAction;
 use App\Actions\CreateOrderAction;
+use App\Models\Order;
 use App\Services\CartService;
 use App\Services\PaymentService;
 use Illuminate\Http\RedirectResponse;
@@ -57,7 +58,7 @@ class CheckoutController extends Controller
         }
 
         $customer = Auth::guard('customer')->user();
-        $order = $this->createOrder->handle($customer, $request->string('provider'));
+        $order = $this->createOrder->handle($customer, $request->string('provider')->toString());
 
         $url = $request->input('provider') === 'stripe'
             ? $this->payment->createStripeSession($order)
@@ -75,7 +76,7 @@ class CheckoutController extends Controller
         if ($sessionId) {
             Stripe::setApiKey(config('services.stripe.secret'));
             $session = StripeSession::retrieve($sessionId);
-            $order = \App\Models\Order::find($session->metadata['order_id']);
+            $order = Order::find((int) $session->metadata['order_id']);
 
             if ($order) {
                 $complete->handle($order, $session->payment_method_types[0] ?? null);
