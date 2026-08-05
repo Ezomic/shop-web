@@ -15,6 +15,7 @@ function logout() {
                 <Link :href="route('admin.orders.index')" class="block rounded px-3 py-2 hover:bg-muted">Orders</Link>
                 <Link :href="route('admin.coupons.index')" class="block rounded px-3 py-2 hover:bg-muted">Coupons</Link>
                 <Link :href="route('admin.settings.edit')" class="block rounded px-3 py-2 hover:bg-muted">Settings</Link>
+                <Link :href="route('admin.api-tokens.index')" class="block rounded px-3 py-2 hover:bg-muted">API tokens</Link>
             </nav>
             <button
                 class="mt-8 w-full rounded px-3 py-2 text-left text-sm text-destructive hover:bg-muted"

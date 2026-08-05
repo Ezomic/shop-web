@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Admin\ApiTokenController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\LoginController as AdminLoginController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
@@ -95,4 +96,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     Route::get('settings', [SettingsController::class, 'edit'])->name('settings.edit');
     Route::put('settings', [SettingsController::class, 'update'])->name('settings.update');
+
+    Route::get('api-tokens', [ApiTokenController::class, 'index'])->name('api-tokens.index');
+    Route::post('api-tokens', [ApiTokenController::class, 'store'])->name('api-tokens.store');
+    Route::delete('api-tokens/{token}', [ApiTokenController::class, 'destroy'])->name('api-tokens.destroy');
 });
