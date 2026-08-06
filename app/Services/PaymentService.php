@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Order;
+use Mollie\Api\Exceptions\MollieException;
 use Mollie\Laravel\Facades\Mollie;
 use Stripe\Checkout\Session as StripeSession;
 use Stripe\Exception\ApiErrorException;
@@ -55,8 +56,33 @@ class PaymentService
 
         return new PaymentStatus(
             orderId: $orderId === null ? null : (int) $orderId,
-            paid: $session->payment_status === 'paid',
+            state: match (true) {
+                $session->payment_status === 'paid' => PaymentState::Paid,
+                $session->status === 'expired' => PaymentState::Failed,
+                default => PaymentState::Pending,
+            },
             method: $session->payment_method_types[0] ?? null,
+        );
+    }
+
+    public function molliePaymentStatus(string $paymentId): ?PaymentStatus
+    {
+        try {
+            $payment = Mollie::api()->payments->get($paymentId);
+        } catch (MollieException) {
+            return null;
+        }
+
+        $orderId = $payment->metadata->order_id ?? null;
+
+        return new PaymentStatus(
+            orderId: $orderId === null ? null : (int) $orderId,
+            state: match (true) {
+                $payment->isPaid() => PaymentState::Paid,
+                $payment->isCanceled(), $payment->isExpired(), $payment->isFailed() => PaymentState::Failed,
+                default => PaymentState::Pending,
+            },
+            method: $payment->method,
         );
     }
 
@@ -68,7 +94,7 @@ class PaymentService
                 'value' => number_format($order->total / 100, 2, '.', ''),
             ],
             'description' => 'Order #'.$order->id,
-            'redirectUrl' => route('mollie.redirect'),
+            'redirectUrl' => route('checkout.mollie', ['order' => $order->id]),
             'webhookUrl' => route('webhooks.mollie'),
             'metadata' => ['order_id' => (string) $order->id],
         ]);

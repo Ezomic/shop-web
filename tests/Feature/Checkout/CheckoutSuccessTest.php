@@ -8,6 +8,7 @@ use App\Models\Download;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Services\PaymentService;
+use App\Services\PaymentState;
 use App\Services\PaymentStatus;
 use Illuminate\Support\Facades\Mail;
 
@@ -33,7 +34,7 @@ it('does not complete an order when the stripe session is unpaid', function (): 
     $customer = Customer::factory()->create();
     $order = orderForCustomer($customer);
 
-    fakeStripeStatus(new PaymentStatus(orderId: $order->id, paid: false, method: 'card'));
+    fakeStripeStatus(new PaymentStatus(orderId: $order->id, state: PaymentState::Pending, method: 'card'));
 
     $this->actingAs($customer, 'customer')
         ->get(route('checkout.success', ['session_id' => 'cs_test_unpaid']))
@@ -51,7 +52,7 @@ it('completes an order when the stripe session is paid', function (): void {
     $customer = Customer::factory()->create();
     $order = orderForCustomer($customer);
 
-    fakeStripeStatus(new PaymentStatus(orderId: $order->id, paid: true, method: 'card'));
+    fakeStripeStatus(new PaymentStatus(orderId: $order->id, state: PaymentState::Paid, method: 'card'));
 
     $this->actingAs($customer, 'customer')
         ->get(route('checkout.success', ['session_id' => 'cs_test_paid']))
@@ -70,7 +71,7 @@ it('refuses to touch an order belonging to another customer', function (): void 
     $victim = Customer::factory()->create();
     $order = orderForCustomer($victim);
 
-    fakeStripeStatus(new PaymentStatus(orderId: $order->id, paid: true, method: 'card'));
+    fakeStripeStatus(new PaymentStatus(orderId: $order->id, state: PaymentState::Paid, method: 'card'));
 
     $this->actingAs($customer, 'customer')
         ->get(route('checkout.success', ['session_id' => 'cs_test_someone_else']))

@@ -77,19 +77,51 @@ class CheckoutController extends Controller
             $order = $status?->orderId === null ? null : Order::find($status->orderId);
 
             if ($order) {
-                abort_if($order->customer_id !== $request->user('customer')->id, 403);
+                $this->authorizeOrder($request, $order);
 
                 // The webhook stays the source of truth; this only shortens the wait for the
                 // customer who is already looking at the page.
-                if ($status->paid) {
+                if ($status->isPaid()) {
                     $complete->handle($order, $status->method);
                 }
+            }
+        }
+
+        if ($order === null && $request->filled('order')) {
+            $order = Order::find($request->integer('order'));
+
+            if ($order) {
+                $this->authorizeOrder($request, $order);
             }
         }
 
         return Inertia::render('checkout/Success', [
             'paid' => $order?->fresh()->isPaid() ?? false,
         ]);
+    }
+
+    public function mollieReturn(Request $request, Order $order, CompleteOrderAction $complete): RedirectResponse
+    {
+        $this->authorizeOrder($request, $order);
+
+        $status = $order->payment_id === null
+            ? null
+            : $this->payment->molliePaymentStatus($order->payment_id);
+
+        if ($status?->isPaid()) {
+            $complete->handle($order, $status->method);
+        }
+
+        if ($status?->hasFailed() && ! $order->isPaid()) {
+            return redirect()->route('checkout.cancel');
+        }
+
+        return redirect()->route('checkout.success', ['order' => $order->id]);
+    }
+
+    private function authorizeOrder(Request $request, Order $order): void
+    {
+        abort_if($order->customer_id !== $request->user('customer')->id, 403);
     }
 
     public function cancel(): Response

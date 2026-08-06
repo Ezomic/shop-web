@@ -75,15 +75,11 @@ Route::middleware('auth:customer')->group(function (): void {
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
     Route::get('/checkout/success', [CheckoutController::class, 'success'])->name('checkout.success');
     Route::get('/checkout/cancel', [CheckoutController::class, 'cancel'])->name('checkout.cancel');
+    Route::get('/checkout/mollie/{order}', [CheckoutController::class, 'mollieReturn'])->name('checkout.mollie');
 
     Route::get('/orders', [CustomerOrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [CustomerOrderController::class, 'show'])->name('orders.show');
 });
-
-// Mollie redirect (no auth — Mollie redirects here after payment)
-Route::get('/mollie/redirect', function () {
-    return redirect()->route('checkout.success');
-})->name('mollie.redirect');
 
 // Admin auth
 Route::middleware('guest')->prefix('admin')->name('admin.')->group(function (): void {
