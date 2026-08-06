@@ -17,7 +17,7 @@ class DownloadController extends Controller
         abort_unless($request->hasValidSignature(), 403);
 
         $download = Download::where('token', $request->route('token'))
-            ->with('orderItem.product.files')
+            ->with('productFile')
             ->firstOrFail();
 
         return $process->handle($download);

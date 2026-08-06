@@ -13,10 +13,9 @@ class ProcessDownloadAction
 {
     public function handle(Download $download): StreamedResponse|Response
     {
-        $item = $download->orderItem;
-        $file = $item->product->files()->first();
+        $file = $download->productFile;
 
-        if (! $file) {
+        if (! $file || ! Storage::disk($file->disk)->exists($file->path)) {
             abort(404);
         }
 

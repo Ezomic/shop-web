@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable(['order_id', 'product_id', 'product_name', 'product_slug', 'price'])]
 class OrderItem extends Model
@@ -34,10 +34,10 @@ class OrderItem extends Model
     }
 
     /**
-     * @return HasOne<Download, $this>
+     * @return HasMany<Download, $this>
      */
-    public function download(): HasOne
+    public function downloads(): HasMany
     {
-        return $this->hasOne(Download::class);
+        return $this->hasMany(Download::class);
     }
 }

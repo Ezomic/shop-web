@@ -32,7 +32,7 @@ class OrderController extends Controller
 
     public function show(Order $order): Response
     {
-        $order->load('customer', 'items.download', 'coupon');
+        $order->load('customer', 'items.downloads', 'coupon');
 
         return Inertia::render('admin/orders/Show', [
             'order' => [
@@ -51,7 +51,7 @@ class OrderController extends Controller
                     'id' => $item->id,
                     'product_name' => $item->product_name,
                     'price' => $item->price,
-                    'downloads' => $item->download->download_count ?? 0,
+                    'downloads' => (int) $item->downloads->sum('download_count'),
                 ]),
             ],
         ]);

@@ -44,7 +44,11 @@
         @foreach ($order->items as $item)
         <li style="margin-bottom: 8px;">
             <strong>{{ $item->product_name }}</strong><br>
-            <a href="{{ $item->download->url() }}">{{ __('shop.download') }}</a>
+            @forelse ($item->downloads as $download)
+            <a href="{{ $download->url() }}">{{ $download->productFile?->original_filename ?? __('shop.download') }}</a><br>
+            @empty
+            <span style="color: #666;">{{ __('mail.no_file_yet') }}</span>
+            @endforelse
         </li>
         @endforeach
     </ul>

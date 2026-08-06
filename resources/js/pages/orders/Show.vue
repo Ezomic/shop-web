@@ -5,11 +5,17 @@ import { Button } from '@/components/ui/button'
 
 defineOptions({ layout: ShopLayout })
 
+interface DownloadLink {
+    id: number
+    filename: string | null
+    url: string
+}
+
 interface OrderItem {
     id: number
     product_name: string
     price: number
-    download_url: string | null
+    downloads: DownloadLink[]
 }
 
 interface Order {
@@ -38,12 +44,14 @@ function formatCents(cents: number) {
         </div>
 
         <div class="mb-6 rounded-lg border p-4 space-y-3">
-            <div v-for="item in order.items" :key="item.id" class="flex items-center justify-between">
-                <span class="font-medium">{{ item.product_name }}</span>
-                <div class="flex items-center gap-3">
+            <div v-for="item in order.items" :key="item.id" class="space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="font-medium">{{ item.product_name }}</span>
                     <span class="text-sm">{{ formatCents(item.price) }}</span>
-                    <Button v-if="item.download_url" size="sm" as-child>
-                        <a :href="item.download_url">Download</a>
+                </div>
+                <div v-if="item.downloads.length" class="flex flex-wrap gap-2">
+                    <Button v-for="download in item.downloads" :key="download.id" size="sm" as-child>
+                        <a :href="download.url">{{ download.filename ?? 'Download' }}</a>
                     </Button>
                 </div>
             </div>

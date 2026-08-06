@@ -7,6 +7,8 @@ use App\Models\Customer;
 use App\Models\Download;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Product;
+use App\Models\ProductFile;
 use App\Services\PaymentService;
 use App\Services\PaymentState;
 use App\Services\PaymentStatus;
@@ -23,7 +25,8 @@ function fakeStripeStatus(?PaymentStatus $status): void
 function orderForCustomer(Customer $customer): Order
 {
     $order = Order::factory()->for($customer)->create();
-    OrderItem::factory()->for($order)->create();
+    $product = Product::factory()->has(ProductFile::factory(), 'files')->create();
+    OrderItem::factory()->for($order)->forProduct($product)->create();
 
     return $order;
 }
