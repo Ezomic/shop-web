@@ -109,6 +109,13 @@ Product `name` and `description` are stored as JSON via `spatie/laravel-translat
 
 **Stripe**: `CheckoutController@store` → `CreateOrderAction` → `PaymentService@createStripeSession` → redirect to Stripe → `StripeWebhookController` receives `checkout.session.completed` → `CompleteOrderAction`.
 
+`CheckoutController@success` also completes the order, but only as a shortcut for the customer
+already looking at the page. It goes through `PaymentService@stripeSessionStatus`, which returns a
+`PaymentStatus` DTO, and it completes nothing unless the session reports `payment_status = paid`
+**and** the order belongs to the logged-in customer (403 otherwise). The webhook stays the source
+of truth. Never widen this path: skipping either check lets anyone with a session id mark an order
+paid without paying (SHOP-5).
+
 **Mollie**: same order creation → `PaymentService@createMolliePayment` → redirect to Mollie → `MollieWebhookController` receives POST with payment ID → fetches status → `CompleteOrderAction`.
 
 Both webhooks excluded from CSRF in `bootstrap/app.php`.

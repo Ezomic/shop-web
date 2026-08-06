@@ -14,8 +14,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
-use Stripe\Checkout\Session as StripeSession;
-use Stripe\Stripe;
 
 class CheckoutController extends Controller
 {
@@ -72,18 +70,26 @@ class CheckoutController extends Controller
     public function success(Request $request, CompleteOrderAction $complete): Response|RedirectResponse
     {
         $sessionId = $request->query('session_id');
+        $order = null;
 
-        if ($sessionId) {
-            Stripe::setApiKey(config('services.stripe.secret'));
-            $session = StripeSession::retrieve($sessionId);
-            $order = Order::find((int) $session->metadata['order_id']);
+        if (is_string($sessionId) && $sessionId !== '') {
+            $status = $this->payment->stripeSessionStatus($sessionId);
+            $order = $status?->orderId === null ? null : Order::find($status->orderId);
 
             if ($order) {
-                $complete->handle($order, $session->payment_method_types[0] ?? null);
+                abort_if($order->customer_id !== $request->user('customer')->id, 403);
+
+                // The webhook stays the source of truth; this only shortens the wait for the
+                // customer who is already looking at the page.
+                if ($status->paid) {
+                    $complete->handle($order, $status->method);
+                }
             }
         }
 
-        return Inertia::render('checkout/Success');
+        return Inertia::render('checkout/Success', [
+            'paid' => $order?->fresh()->isPaid() ?? false,
+        ]);
     }
 
     public function cancel(): Response
