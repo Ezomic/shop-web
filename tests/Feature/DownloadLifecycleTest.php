@@ -148,7 +148,7 @@ it('lets an admin resend the order email', function (): void {
         ->post(route('admin.orders.resend', $order))
         ->assertRedirect();
 
-    Mail::assertSent(OrderPaidMail::class);
+    Mail::assertQueued(OrderPaidMail::class);
 });
 
 it('refuses to resend the email for an unpaid order', function (): void {
@@ -159,7 +159,7 @@ it('refuses to resend the email for an unpaid order', function (): void {
         ->post(route('admin.orders.resend', $order))
         ->assertStatus(422);
 
-    Mail::assertNothingSent();
+    Mail::assertNothingQueued();
 });
 
 it('lets an admin regenerate a link and kills the old one', function (): void {

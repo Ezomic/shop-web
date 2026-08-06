@@ -20,6 +20,10 @@ allow re-downloading purchases. Admins manage products, orders, coupons, and set
 
 Site runs under **Herd** at `shop.test`. No `php artisan serve` needed.
 
+`OrderPaidMail` is **queued**, so a local run needs `php artisan queue:work` (or `composer dev`,
+which starts one) before order emails go anywhere. In production this is a systemd unit named
+`shop-web-queue`; without it customers never receive their download links.
+
 ```bash
 php artisan migrate          # run pending migrations
 php artisan db:seed          # seed admin user: admin@shop.test / password
@@ -92,7 +96,7 @@ npm run build                # or: npm run dev
 - **`CartService`** — session-backed cart: `add`, `remove`, `contents`, `applyCoupon`, `totals`
 - **`PaymentService`** — `createStripeSession(Order)`, `createMolliePayment(Order)`, `refundStripe`, `refundMollie`
 - **`CreateOrderAction`** — reads cart + coupon → creates `Order` + `OrderItem` rows. Deliberately does **not** touch `uses_count`
-- **`CompleteOrderAction`** — marks order paid, increments the coupon `uses_count`, generates `Download` uuid tokens, sends `OrderPaidMail`. No-ops on an already paid order, which is what keeps webhook replays idempotent
+- **`CompleteOrderAction`** — marks order paid, increments the coupon `uses_count`, generates `Download` uuid tokens, queues `OrderPaidMail`. No-ops on an already paid order, which is what keeps webhook replays idempotent
 - **`RefundOrderAction`** — refunds through `PaymentService` and releases the coupon use again
 - **`ProcessDownloadAction`** — streams the `ProductFile` the `Download` points at, 404s if it is gone, increments `download_count`
 
@@ -160,6 +164,7 @@ pages/
 
 | Variable | Purpose |
 |---|---|
+| `FLARE_ENABLED` / `FLARE_URL` / `FLARE_KEY` | Error reporting to the self-hosted flare instance (`php artisan flare:test`) |
 | `SHOP_DOWNLOAD_LINK_TTL_DAYS` | Days an emailed download link stays valid (0 disables expiry) |
 | `SHOP_DOWNLOAD_MAX_USES` | Times a single download link may be used (0 disables the cap) |
 | `STRIPE_KEY` | Stripe publishable key |

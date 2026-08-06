@@ -115,7 +115,7 @@ it('is idempotent when the same event is delivered twice', function (): void {
 
     expect(Download::count())->toBe(1);
 
-    Mail::assertSentCount(1);
+    Mail::assertQueuedCount(1);
 });
 
 it('acknowledges an event for an order it does not know', function (): void {
