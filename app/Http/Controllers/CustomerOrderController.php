@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Actions\ReissueDownloadAction;
 use App\Models\Download;
 use App\Models\Order;
 use App\Models\OrderItem;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -29,6 +31,16 @@ class CustomerOrderController extends Controller
             ]);
 
         return Inertia::render('orders/Index', ['orders' => $orders]);
+    }
+
+    public function reissue(Request $request, Order $order, Download $download, ReissueDownloadAction $reissue): RedirectResponse
+    {
+        abort_if($order->customer_id !== $request->user('customer')->id, 403);
+        abort_if($download->orderItem->order_id !== $order->id, 404);
+
+        $reissue->handle($download);
+
+        return back()->with('success', 'A fresh download link is ready.');
     }
 
     public function show(Request $request, Order $order): Response
@@ -54,6 +66,8 @@ class CustomerOrderController extends Controller
                         'id' => $download->id,
                         'filename' => $download->productFile?->original_filename,
                         'url' => $download->url(),
+                        'uses_left' => $download->usesLeft(),
+                        'exhausted' => $download->isExhausted(),
                     ])->values()->all(),
                 ]),
             ],

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import ShopLayout from '@/layouts/ShopLayout.vue'
+import { router } from '@inertiajs/vue3'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 
@@ -9,6 +10,8 @@ interface DownloadLink {
     id: number
     filename: string | null
     url: string
+    uses_left: number | null
+    exhausted: boolean
 }
 
 interface OrderItem {
@@ -29,10 +32,18 @@ interface Order {
     items: OrderItem[]
 }
 
-defineProps<{ order: Order }>()
+const props = defineProps<{ order: Order }>()
 
 function formatCents(cents: number) {
     return '€ ' + (cents / 100).toFixed(2).replace('.', ',')
+}
+
+function reissue(downloadId: number) {
+    router.post(
+        route('orders.downloads.reissue', { order: props.order.id, download: downloadId }),
+        {},
+        { preserveScroll: true },
+    )
 }
 </script>
 
@@ -49,10 +60,29 @@ function formatCents(cents: number) {
                     <span class="font-medium">{{ item.product_name }}</span>
                     <span class="text-sm">{{ formatCents(item.price) }}</span>
                 </div>
-                <div v-if="item.downloads.length" class="flex flex-wrap gap-2">
-                    <Button v-for="download in item.downloads" :key="download.id" size="sm" as-child>
-                        <a :href="download.url">{{ download.filename ?? 'Download' }}</a>
-                    </Button>
+                <div v-if="item.downloads.length" class="space-y-2">
+                    <div
+                        v-for="download in item.downloads"
+                        :key="download.id"
+                        class="flex flex-wrap items-center gap-2"
+                    >
+                        <Button v-if="!download.exhausted" size="sm" as-child>
+                            <a :href="download.url">{{ download.filename ?? 'Download' }}</a>
+                        </Button>
+                        <span v-else class="text-sm text-muted-foreground">
+                            {{ download.filename ?? 'Download' }} — link used up
+                        </span>
+                        <span v-if="download.uses_left !== null" class="text-xs text-muted-foreground">
+                            {{ download.uses_left }} left
+                        </span>
+                        <button
+                            type="button"
+                            class="text-xs underline"
+                            @click="reissue(download.id)"
+                        >
+                            Get a fresh link
+                        </button>
+                    </div>
                 </div>
             </div>
             <hr>

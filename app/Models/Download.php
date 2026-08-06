@@ -44,6 +44,26 @@ class Download extends Model
 
     public function url(): string
     {
-        return URL::signedRoute('downloads.get', ['token' => $this->token]);
+        $days = (int) config('shop.downloads.link_ttl_days');
+
+        if ($days <= 0) {
+            return URL::signedRoute('downloads.get', ['token' => $this->token]);
+        }
+
+        return URL::temporarySignedRoute('downloads.get', now()->addDays($days), [
+            'token' => $this->token,
+        ]);
+    }
+
+    public function usesLeft(): ?int
+    {
+        $max = (int) config('shop.downloads.max_uses');
+
+        return $max <= 0 ? null : max(0, $max - $this->download_count);
+    }
+
+    public function isExhausted(): bool
+    {
+        return $this->usesLeft() === 0;
     }
 }
