@@ -6,9 +6,9 @@ use App\Models\User;
 
 // The admin group runs 'auth' before 'admin', so an unauthenticated request is
 // bounced by the auth middleware to the storefront login, not to admin.login.
-it('redirects guests from the token pages', function () {
-    $this->get(route('admin.api-tokens.index'))->assertRedirect(route('login'));
-    $this->post(route('admin.api-tokens.store'), ['name' => 'CI'])->assertRedirect(route('login'));
+it('redirects guests from the token pages to the admin login', function () {
+    $this->get(route('admin.api-tokens.index'))->assertRedirect(route('admin.login'));
+    $this->post(route('admin.api-tokens.store'), ['name' => 'CI'])->assertRedirect(route('admin.login'));
 });
 
 it('lists the users tokens without exposing the secret', function () {
