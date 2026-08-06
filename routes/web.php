@@ -79,6 +79,8 @@ Route::middleware('auth:customer')->group(function (): void {
 
     Route::get('/orders', [CustomerOrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [CustomerOrderController::class, 'show'])->name('orders.show');
+    Route::post('/orders/{order}/downloads/{download}/reissue', [CustomerOrderController::class, 'reissue'])
+        ->name('orders.downloads.reissue');
 });
 
 // Admin auth
@@ -96,6 +98,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     Route::resource('orders', AdminOrderController::class)->only(['index', 'show']);
     Route::post('orders/{order}/refund', [AdminOrderController::class, 'refund'])->name('orders.refund');
+    Route::post('orders/{order}/resend', [AdminOrderController::class, 'resend'])->name('orders.resend');
+    Route::post('orders/{order}/downloads/{download}/reissue', [AdminOrderController::class, 'reissue'])
+        ->name('orders.downloads.reissue');
 
     Route::resource('coupons', CouponController::class)->except('show');
 

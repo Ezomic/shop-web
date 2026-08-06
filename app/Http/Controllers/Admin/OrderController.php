@@ -5,9 +5,14 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\RefundOrderAction;
+use App\Actions\ReissueDownloadAction;
 use App\Http\Controllers\Controller;
+use App\Mail\OrderPaidMail;
+use App\Models\Download;
 use App\Models\Order;
+use App\Models\OrderItem;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -32,7 +37,7 @@ class OrderController extends Controller
 
     public function show(Order $order): Response
     {
-        $order->load('customer', 'items.downloads', 'coupon');
+        $order->load('customer', 'items.downloads.productFile', 'coupon');
 
         return Inertia::render('admin/orders/Show', [
             'order' => [
@@ -47,14 +52,38 @@ class OrderController extends Controller
                 'payment_method' => $order->payment_method,
                 'coupon_code' => $order->coupon?->code,
                 'paid_at' => $order->paid_at?->toDateString(),
-                'items' => $order->items->map(fn ($item) => [
+                'items' => $order->items->map(fn (OrderItem $item): array => [
                     'id' => $item->id,
                     'product_name' => $item->product_name,
                     'price' => $item->price,
-                    'downloads' => (int) $item->downloads->sum('download_count'),
+                    'downloads' => $item->downloads->map(fn (Download $download): array => [
+                        'id' => $download->id,
+                        'filename' => $download->productFile?->original_filename,
+                        'count' => $download->download_count,
+                    ])->values()->all(),
                 ]),
             ],
         ]);
+    }
+
+    public function resend(Order $order): RedirectResponse
+    {
+        abort_if(! $order->isPaid(), 422);
+
+        $order->load('items.downloads.productFile', 'customer');
+
+        Mail::to($order->customer->email)->send(new OrderPaidMail($order));
+
+        return back()->with('success', 'Order email resent.');
+    }
+
+    public function reissue(Order $order, Download $download, ReissueDownloadAction $reissue): RedirectResponse
+    {
+        abort_if($download->orderItem->order_id !== $order->id, 404);
+
+        $reissue->handle($download);
+
+        return back()->with('success', 'Download link regenerated. The old link no longer works.');
     }
 
     public function refund(Order $order, RefundOrderAction $refund): RedirectResponse

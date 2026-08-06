@@ -8,5 +8,5 @@ return [
     'order_paid_intro' => 'Hi :name, thank you for your purchase. Your downloads are ready.',
     'download_links' => 'Your download links',
     'no_file_yet' => 'No file attached to this product yet. Contact us and we will sort it out.',
-    'order_footer' => 'Download links are signed and do not expire. Log in to your account to re-download at any time.',
+    'order_footer' => 'Emailed download links stay valid for a limited time. Log in to your account to get a current link at any time.',
 ];

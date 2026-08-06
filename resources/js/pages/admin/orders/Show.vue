@@ -6,11 +6,17 @@ import { Badge } from '@/components/ui/badge'
 
 defineOptions({ layout: AdminLayout })
 
+interface DownloadRow {
+    id: number
+    filename: string | null
+    count: number
+}
+
 interface OrderItem {
     id: number
     product_name: string
     price: number
-    downloads: number
+    downloads: DownloadRow[]
 }
 
 interface Order {
@@ -39,6 +45,20 @@ function refund() {
         router.post(route('admin.orders.refund', props.order.id))
     }
 }
+
+function resend() {
+    router.post(route('admin.orders.resend', props.order.id), {}, { preserveScroll: true })
+}
+
+function reissue(downloadId: number) {
+    if (confirm('Regenerate this link? The link already sent to the customer stops working.')) {
+        router.post(
+            route('admin.orders.downloads.reissue', { order: props.order.id, download: downloadId }),
+            {},
+            { preserveScroll: true },
+        )
+    }
+}
 </script>
 
 <template>
@@ -56,9 +76,21 @@ function refund() {
         </div>
 
         <div class="mb-4 rounded-lg border p-4">
-            <div v-for="item in order.items" :key="item.id" class="flex items-center justify-between py-1 text-sm">
-                <span>{{ item.product_name }}</span>
-                <span class="text-muted-foreground">{{ formatCents(item.price) }} · {{ item.downloads }} downloads</span>
+            <div v-for="item in order.items" :key="item.id" class="py-1 text-sm">
+                <div class="flex items-center justify-between">
+                    <span>{{ item.product_name }}</span>
+                    <span class="text-muted-foreground">{{ formatCents(item.price) }}</span>
+                </div>
+                <div
+                    v-for="download in item.downloads"
+                    :key="download.id"
+                    class="flex items-center justify-between pl-4 text-xs text-muted-foreground"
+                >
+                    <span>{{ download.filename ?? 'file' }} · {{ download.count }} downloads</span>
+                    <button type="button" class="underline" @click="reissue(download.id)">
+                        Regenerate link
+                    </button>
+                </div>
             </div>
             <hr class="my-2">
             <div v-if="order.discount > 0" class="flex justify-between text-sm text-green-600">
@@ -69,6 +101,13 @@ function refund() {
             </div>
         </div>
 
-        <Button v-if="order.status === 'paid'" variant="destructive" @click="refund">Refund order</Button>
+        <div class="flex items-center gap-3">
+            <Button v-if="order.status === 'paid'" variant="outline" @click="resend">
+                Resend order email
+            </Button>
+            <Button v-if="order.status === 'paid'" variant="destructive" @click="refund">
+                Refund order
+            </Button>
+        </div>
     </div>
 </template>

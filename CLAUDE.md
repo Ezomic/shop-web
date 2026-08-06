@@ -49,7 +49,7 @@ npm run build                # or: npm run dev
 ### Customer area (auth:customer)
 
 `GET|POST /checkout`, `GET /checkout/success`, `GET /checkout/cancel`, `GET /checkout/mollie/{order}`,
-`GET /orders`, `GET /orders/{order}`,
+`GET /orders`, `GET /orders/{order}`, `POST /orders/{order}/downloads/{download}/reissue`,
 `GET /email/verify` (notice), `GET /email/verify/{id}/{hash}` (signed), `POST /email/verification-notification`
 
 ### Webhook (CSRF-excluded)
@@ -62,7 +62,7 @@ npm run build                # or: npm run dev
 |------|--------|
 | Login | `GET|POST /admin/login`, `POST /admin/logout` |
 | Products | full CRUD + `POST /admin/products/reorder` |
-| Orders | index + show + `POST /admin/orders/{order}/refund` |
+| Orders | index + show + `POST /admin/orders/{order}/refund`, `POST /admin/orders/{order}/resend`, `POST /admin/orders/{order}/downloads/{download}/reissue` |
 | Coupons | full CRUD |
 | Settings | `GET|PUT /admin/settings` |
 
@@ -157,6 +157,8 @@ pages/
 
 | Variable | Purpose |
 |---|---|
+| `SHOP_DOWNLOAD_LINK_TTL_DAYS` | Days an emailed download link stays valid (0 disables expiry) |
+| `SHOP_DOWNLOAD_MAX_USES` | Times a single download link may be used (0 disables the cap) |
 | `STRIPE_KEY` | Stripe publishable key |
 | `STRIPE_SECRET` | Stripe secret key — used server-side for Checkout Sessions and refunds |
 | `STRIPE_WEBHOOK_SECRET` | Signing secret used by `StripeWebhookController` to verify incoming webhooks |
@@ -186,7 +188,11 @@ Use `RefreshDatabase` and factories; no database mocking, per project convention
 ## Key gotchas
 
 1. **Two separate auth guards** — customer login uses `auth:customer`, admin login uses `auth` (web). Never mix them.
-2. **Download tokens are permanent** — `Download::url()` returns a signed route with no expiry. The customer's order page always has working links.
+2. **Download links expire and are capped** — `Download::url()` returns a *temporary* signed route
+   (`shop.downloads.link_ttl_days`, default 14) and `ProcessDownloadAction` refuses a link past
+   `shop.downloads.max_uses` (default 10). Both are disabled by setting them to 0. The order page
+   mints a fresh link on every render, so only emailed links go stale; customers can also re-issue
+   a link themselves and admins can regenerate one or resend the whole order email (SHOP-10).
 3. **Price is always in cents** (int). Format with `priceFormatted()` on `Product` or `totalFormatted()` on `Order`.
 4. **Webhook CSRF exclusion** — both `/webhooks/stripe` and `/webhooks/mollie` are in the `validateCsrfTokens` except list in `bootstrap/app.php`.
 5. **Translatable fields** — `Product::name` and `Product::description` are each their own JSON
