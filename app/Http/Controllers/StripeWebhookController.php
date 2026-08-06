@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\CompleteOrderAction;
 use App\Models\Order;
+use App\Services\PaymentCredentials;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Stripe\Checkout\Session;
@@ -15,15 +16,15 @@ use Stripe\Webhook;
 
 class StripeWebhookController extends Controller
 {
-    public function handle(Request $request, CompleteOrderAction $complete): Response
+    public function handle(Request $request, CompleteOrderAction $complete, PaymentCredentials $credentials): Response
     {
-        Stripe::setApiKey(config('services.stripe.secret'));
+        Stripe::setApiKey($credentials->stripeSecret());
 
         try {
             $event = Webhook::constructEvent(
                 $request->getContent(),
                 $request->header('Stripe-Signature'),
-                config('services.stripe.webhook_secret'),
+                (string) $credentials->stripeWebhookSecret(),
             );
         } catch (SignatureVerificationException) {
             return response('Invalid signature', 400);

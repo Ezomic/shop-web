@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Models\Order;
 use Mollie\Api\Exceptions\MollieException;
+use Mollie\Api\MollieApiClient;
 use Mollie\Laravel\Facades\Mollie;
 use Stripe\Checkout\Session as StripeSession;
 use Stripe\Exception\ApiErrorException;
@@ -15,9 +16,11 @@ use Stripe\Stripe;
 
 class PaymentService
 {
+    public function __construct(private readonly PaymentCredentials $credentials) {}
+
     public function createStripeSession(Order $order): string
     {
-        Stripe::setApiKey(config('services.stripe.secret'));
+        Stripe::setApiKey($this->credentials->stripeSecret());
 
         $lineItems = $order->items->map(fn ($item) => [
             'price_data' => [
@@ -44,7 +47,7 @@ class PaymentService
 
     public function stripeSessionStatus(string $sessionId): ?PaymentStatus
     {
-        Stripe::setApiKey(config('services.stripe.secret'));
+        Stripe::setApiKey($this->credentials->stripeSecret());
 
         try {
             $session = StripeSession::retrieve($sessionId);
@@ -68,7 +71,7 @@ class PaymentService
     public function molliePaymentStatus(string $paymentId): ?PaymentStatus
     {
         try {
-            $payment = Mollie::api()->payments->get($paymentId);
+            $payment = $this->mollie()->payments->get($paymentId);
         } catch (MollieException) {
             return null;
         }
@@ -88,7 +91,7 @@ class PaymentService
 
     public function createMolliePayment(Order $order): string
     {
-        $payment = Mollie::api()->payments->create([
+        $payment = $this->mollie()->payments->create([
             'amount' => [
                 'currency' => $order->currency,
                 'value' => number_format($order->total / 100, 2, '.', ''),
@@ -106,7 +109,7 @@ class PaymentService
 
     public function refundStripe(Order $order): void
     {
-        Stripe::setApiKey(config('services.stripe.secret'));
+        Stripe::setApiKey($this->credentials->stripeSecret());
 
         $session = StripeSession::retrieve((string) $order->payment_id);
         $paymentIntent = $session->payment_intent;
@@ -123,7 +126,7 @@ class PaymentService
 
     public function refundMollie(Order $order): void
     {
-        $payment = Mollie::api()->payments->get($order->payment_id);
+        $payment = $this->mollie()->payments->get($order->payment_id);
 
         $payment->refund([
             'amount' => [
@@ -133,5 +136,17 @@ class PaymentService
         ]);
 
         $order->update(['status' => 'refunded']);
+    }
+
+    private function mollie(): MollieApiClient
+    {
+        $client = Mollie::api();
+        $key = $this->credentials->mollieKey();
+
+        if (is_string($key) && $key !== '') {
+            $client->setApiKey($key);
+        }
+
+        return $client;
     }
 }

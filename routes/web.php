@@ -92,7 +92,9 @@ Route::middleware('guest')->prefix('admin')->name('admin.')->group(function (): 
 Route::post('admin/logout', [AdminLoginController::class, 'destroy'])->name('admin.logout');
 
 // Admin
-Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function (): void {
+// `admin` (EnsureAdmin) does the auth check itself and redirects to the admin login. Adding
+// `auth` in front of it would send admins to the customer login page instead.
+Route::middleware('admin')->prefix('admin')->name('admin.')->group(function (): void {
     Route::resource('products', AdminProductController::class)->except('show');
     Route::post('products/reorder', [AdminProductController::class, 'reorder'])->name('products.reorder');
 

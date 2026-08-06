@@ -75,6 +75,7 @@ npm run build                # or: npm run dev
 | `Product` | `HasMany: ProductFile`, `HasMany: OrderItem` | `spatie/laravel-translatable` on `name`, `description`; `published()` + `ordered()` scopes; `priceFormatted()` |
 | `ProductFile` | `BelongsTo: Product` | stored on private `shop` disk |
 | `Customer` | `HasMany: Order` | separate `customer` guard; implements `MustVerifyEmail` |
+| `Setting` | — | encrypted key/value store behind `PaymentCredentials` |
 | `Coupon` | `HasMany: Order` | `isValid(): bool`, `discountFor(int): int` |
 | `Order` | `BelongsTo: Customer`, `BelongsTo: Coupon`, `HasMany: OrderItem` | `isPaid(): bool`, `totalFormatted()` |
 | `OrderItem` | `BelongsTo: Order`, `BelongsTo: Product`, `HasMany: Download` | price/name snapshots at time of purchase |
@@ -99,7 +100,9 @@ npm run build                # or: npm run dev
 
 - **`SetLocale`** — reads `session('locale')`, validates `en|nl`, calls `app()->setLocale()`; appended to web group
 - **`HandleInertiaRequests`** — standard Inertia middleware; appended to web group
-- **`EnsureAdmin`** — redirects to `admin.login` if `web` guard has no user; aliased as `admin`
+- **`EnsureAdmin`** — redirects to `admin.login` if `web` guard has no user; aliased as `admin`.
+  The admin routes use **only** this alias, not `auth`: `auth` runs first and would bounce admins
+  to the customer login page instead.
 
 ### i18n
 
@@ -164,8 +167,11 @@ pages/
 | `STRIPE_WEBHOOK_SECRET` | Signing secret used by `StripeWebhookController` to verify incoming webhooks |
 | `MOLLIE_KEY` | Mollie API key (test or live) |
 
-`Admin\SettingsController` can also write these to `.env` directly from `/admin/settings` and
-clears the config cache afterward — no server restart needed.
+Payment credentials can also be set from `/admin/settings`. They are stored **encrypted in the
+`settings` table**, not written to `.env` (SHOP-12): the old behaviour rewrote the env file at
+runtime, which cannot work under `config:cache` and fails on a deploy-owned filesystem. Read them
+through `PaymentCredentials`, which prefers the stored value and falls back to the environment.
+Never read `config('services.stripe.secret')` directly in new code.
 
 ## Testing
 
