@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Carbon\CarbonImmutable;
+use Database\Factories\ProductFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Translatable\HasTranslations;
@@ -24,9 +26,12 @@ use Spatie\Translatable\HasTranslations;
  * @property string $name Locale-resolved via spatie/laravel-translatable
  * @property string $description Locale-resolved via spatie/laravel-translatable
  */
-#[Fillable(['slug', 'translations', 'price', 'currency', 'status', 'preview_url', 'sort_order'])]
+#[Fillable(['slug', 'name', 'description', 'price', 'currency', 'status', 'preview_url', 'sort_order'])]
 class Product extends Model
 {
+    /** @use HasFactory<ProductFactory> */
+    use HasFactory;
+
     use HasTranslations;
 
     /** @var list<string> */
