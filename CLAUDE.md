@@ -49,7 +49,8 @@ npm run build                # or: npm run dev
 ### Customer area (auth:customer)
 
 `GET|POST /checkout`, `GET /checkout/success`, `GET /checkout/cancel`,
-`GET /orders`, `GET /orders/{order}`
+`GET /orders`, `GET /orders/{order}`,
+`GET /email/verify` (notice), `GET /email/verify/{id}/{hash}` (signed), `POST /email/verification-notification`
 
 ### Webhook (CSRF-excluded)
 
@@ -170,6 +171,10 @@ Use `RefreshDatabase` and factories; no database mocking, per project convention
 5. **Translatable fields** — `Product::name` and `Product::description` resolve to the current locale automatically. To get a specific locale use `$product->getTranslation('name', 'en')`.
 6. **Admin seeded user** — `admin@shop.test` / `password` (run `php artisan db:seed`).
 7. **Login throttling** — both `POST /login` and `POST /admin/login` use the `throttle:login` limiter (5/min by IP), registered in `AppServiceProvider::boot()`.
+8. **Email verification is not a gate** — `Customer` implements `MustVerifyEmail` and registration
+   sends the notification, but nothing requires a verified address. Checkout and downloads stay
+   open; `ShopLayout` just shows a resend prompt. The `verification.verify` route must exist or
+   registration itself 500s, since the notification builds a signed URL for it (SHOP-4).
 
 ## Linear
 

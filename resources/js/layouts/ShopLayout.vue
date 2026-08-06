@@ -1,5 +1,20 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3'
+import { Link, router, usePage } from '@inertiajs/vue3'
+import { computed } from 'vue'
+
+interface SharedProps {
+    auth: { customer: { name: string; email: string; email_verified: boolean } | null }
+}
+
+const page = usePage<SharedProps>()
+
+const needsVerification = computed(
+    () => page.props.auth.customer !== null && !page.props.auth.customer.email_verified,
+)
+
+function resendVerification() {
+    router.post(route('verification.send'), {}, { preserveScroll: true })
+}
 </script>
 
 <template>
@@ -13,6 +28,14 @@ import { Link } from '@inertiajs/vue3'
                 </div>
             </nav>
         </header>
+        <div v-if="needsVerification" class="border-b bg-muted/50">
+            <div class="container mx-auto flex flex-wrap items-center gap-2 px-4 py-3 text-sm">
+                <span>Your email address is not verified yet.</span>
+                <button type="button" class="underline" @click="resendVerification">
+                    Resend the verification link
+                </button>
+            </div>
+        </div>
         <main class="container mx-auto px-4 py-8">
             <slot />
         </main>
