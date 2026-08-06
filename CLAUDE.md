@@ -48,7 +48,7 @@ npm run build                # or: npm run dev
 
 ### Customer area (auth:customer)
 
-`GET|POST /checkout`, `GET /checkout/success`, `GET /checkout/cancel`,
+`GET|POST /checkout`, `GET /checkout/success`, `GET /checkout/cancel`, `GET /checkout/mollie/{order}`,
 `GET /orders`, `GET /orders/{order}`,
 `GET /email/verify` (notice), `GET /email/verify/{id}/{hash}` (signed), `POST /email/verification-notification`
 
@@ -117,6 +117,13 @@ of truth. Never widen this path: skipping either check lets anyone with a sessio
 paid without paying (SHOP-5).
 
 **Mollie**: same order creation → `PaymentService@createMolliePayment` → redirect to Mollie → `MollieWebhookController` receives POST with payment ID → fetches status → `CompleteOrderAction`.
+
+Mollie's `redirectUrl` is `checkout.mollie` (`/checkout/mollie/{order}`, behind `auth:customer`).
+`CheckoutController@mollieReturn` reads the real payment status and routes accordingly: paid
+completes the order and goes to success, cancelled/expired/failed goes to `checkout.cancel`, and
+anything still open goes to the success page in its pending state. Do not point `redirectUrl` at a
+bare success route again: Mollie uses the same URL for every outcome, so that showed a thank-you
+page for payments that never happened (SHOP-6).
 
 Both webhooks excluded from CSRF in `bootstrap/app.php`.
 
