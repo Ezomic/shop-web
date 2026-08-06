@@ -168,7 +168,11 @@ Use `RefreshDatabase` and factories; no database mocking, per project convention
 2. **Download tokens are permanent** — `Download::url()` returns a signed route with no expiry. The customer's order page always has working links.
 3. **Price is always in cents** (int). Format with `priceFormatted()` on `Product` or `totalFormatted()` on `Order`.
 4. **Webhook CSRF exclusion** — both `/webhooks/stripe` and `/webhooks/mollie` are in the `validateCsrfTokens` except list in `bootstrap/app.php`.
-5. **Translatable fields** — `Product::name` and `Product::description` resolve to the current locale automatically. To get a specific locale use `$product->getTranslation('name', 'en')`.
+5. **Translatable fields** — `Product::name` and `Product::description` are each their own JSON
+   column holding `{"en": "...", "nl": "..."}`, which is the shape spatie expects. Assign them as
+   arrays keyed by locale. Reading `$product->name` resolves the current locale; for a specific
+   one use `$product->getTranslation('name', 'en')`. There is no `translations` column any more
+   (SHOP-14); the old single-column shape silently stored the string `Array` and read back NULL.
 6. **Admin seeded user** — `admin@shop.test` / `password` (run `php artisan db:seed`).
 7. **Login throttling** — both `POST /login` and `POST /admin/login` use the `throttle:login` limiter (5/min by IP), registered in `AppServiceProvider::boot()`.
 8. **Email verification is not a gate** — `Customer` implements `MustVerifyEmail` and registration

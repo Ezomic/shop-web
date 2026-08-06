@@ -57,10 +57,8 @@ class ProductController extends Controller
 
         $product = Product::create([
             'slug' => $slug,
-            'translations' => [
-                'en' => ['name' => $data['name_en'], 'description' => $data['description_en']],
-                'nl' => ['name' => $data['name_nl'], 'description' => $data['description_nl']],
-            ],
+            'name' => ['en' => $data['name_en'], 'nl' => $data['name_nl']],
+            'description' => ['en' => $data['description_en'], 'nl' => $data['description_nl']],
             'price' => $data['price'],
             'status' => $data['status'],
             'preview_url' => $data['preview_url'] ?? null,
@@ -113,10 +111,8 @@ class ProductController extends Controller
         ]);
 
         $product->update([
-            'translations' => [
-                'en' => ['name' => $data['name_en'], 'description' => $data['description_en']],
-                'nl' => ['name' => $data['name_nl'], 'description' => $data['description_nl']],
-            ],
+            'name' => ['en' => $data['name_en'], 'nl' => $data['name_nl']],
+            'description' => ['en' => $data['description_en'], 'nl' => $data['description_nl']],
             'price' => $data['price'],
             'status' => $data['status'],
             'preview_url' => $data['preview_url'] ?? null,
