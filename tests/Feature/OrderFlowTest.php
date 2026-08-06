@@ -86,7 +86,7 @@ it('marks the order paid and mails the customer', function (): void {
         ->and($order->paid_at)->not->toBeNull()
         ->and(Download::count())->toBe(1);
 
-    Mail::assertSent(OrderPaidMail::class, fn (OrderPaidMail $mail) => $mail->hasTo($customer->email));
+    Mail::assertQueued(OrderPaidMail::class, fn (OrderPaidMail $mail) => $mail->hasTo($customer->email));
 });
 
 it('does nothing when the order is already paid', function (): void {
@@ -109,7 +109,7 @@ it('does nothing when the order is already paid', function (): void {
         ->and($order->paid_at->timestamp)->toBe($firstPaidAt->timestamp)
         ->and(Download::count())->toBe(1);
 
-    Mail::assertSentCount(1);
+    Mail::assertQueuedCount(1);
 });
 
 it('sends the order mail with a link per purchased file', function (): void {
@@ -123,7 +123,7 @@ it('sends the order mail with a link per purchased file', function (): void {
 
     app(CompleteOrderAction::class)->handle($order, 'card');
 
-    Mail::assertSent(OrderPaidMail::class);
+    Mail::assertQueued(OrderPaidMail::class);
     expect(Download::count())->toBe(2);
 });
 

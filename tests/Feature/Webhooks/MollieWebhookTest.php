@@ -56,7 +56,7 @@ it('leaves the order alone when the payment is not paid', function (): void {
     expect($order->fresh()->isPaid())->toBeFalse()
         ->and(Download::count())->toBe(0);
 
-    Mail::assertNothingSent();
+    Mail::assertNothingQueued();
 });
 
 it('rejects a call with no payment id', function (): void {
@@ -89,5 +89,5 @@ it('is idempotent across repeat deliveries', function (): void {
 
     expect(Download::count())->toBe(1);
 
-    Mail::assertSentCount(1);
+    Mail::assertQueuedCount(1);
 });

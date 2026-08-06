@@ -6,12 +6,17 @@ namespace App\Mail;
 
 use App\Models\Order;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class OrderPaidMail extends Mailable
+/**
+ * Queued on purpose: this is sent from inside the Stripe and Mollie webhooks, and a slow or
+ * failing mail host must not turn into a 500 that makes the provider retry the whole delivery.
+ */
+class OrderPaidMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 

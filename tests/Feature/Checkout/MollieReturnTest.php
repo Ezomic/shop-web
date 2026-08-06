@@ -46,7 +46,7 @@ it('sends a cancelled payment to the cancel page', function (): void {
     expect($order->fresh()->isPaid())->toBeFalse()
         ->and(Download::count())->toBe(0);
 
-    Mail::assertNothingSent();
+    Mail::assertNothingQueued();
 });
 
 it('sends a paid payment to the success page and completes the order', function (): void {
@@ -67,7 +67,7 @@ it('sends a paid payment to the success page and completes the order', function 
         ->and($order->payment_method)->toBe('ideal')
         ->and(Download::count())->toBe(1);
 
-    Mail::assertSent(OrderPaidMail::class);
+    Mail::assertQueued(OrderPaidMail::class);
 });
 
 it('keeps an open payment on the pending success page', function (): void {
@@ -84,7 +84,7 @@ it('keeps an open payment on the pending success page', function (): void {
 
     expect($order->fresh()->isPaid())->toBeFalse();
 
-    Mail::assertNothingSent();
+    Mail::assertNothingQueued();
 });
 
 it('reports the pending state on the success page for an unpaid order', function (): void {

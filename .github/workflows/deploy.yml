@@ -1,0 +1,55 @@
+name: Deploy to production
+
+# Manual deploys only. This never triggers automatically: it needs the
+# DEPLOY_SSH_* secrets and a provisioned droplet directory first.
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_SSH_HOST }}
+          username: ${{ secrets.DEPLOY_SSH_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          # APP_DIR is the repository name, which is the app slug by convention,
+          # so a fresh clone deploys without editing this file.
+          envs: APP_DIR
+          script: |
+            set -e
+            cd "/home/deploy/${APP_DIR}"
+            php artisan down --retry=15
+            git fetch origin
+            git reset --hard origin/main
+            composer install --no-dev --optimize-autoloader --no-interaction
+            php artisan optimize:clear
+            npm ci
+            npm run build
+            php artisan migrate --force
+            chmod 664 database/database.sqlite database/database.sqlite-wal database/database.sqlite-shm 2>/dev/null || true
+            chgrp www-data database/database.sqlite database/database.sqlite-wal database/database.sqlite-shm 2>/dev/null || true
+            # setgid on database/: the scheduler runs as deploy, not www-data, so a
+            # WAL/SHM file it recreates would land group=deploy and be unwritable by
+            # PHP-FPM (www-data).
+            chmod g+s database
+            php artisan optimize
+            # The queue worker holds the old code in memory, and the order email
+            # runs through it, so it has to come back on the new release.
+            sudo systemctl restart shop-web-queue || true
+            # No php-fpm reload on purpose: all sites on the droplet share one
+            # opcache, and validate_timestamps is on, so new code is picked up on
+            # the next request without discarding every other app's bytecode.
+            php artisan up
+        env:
+          APP_DIR: ${{ github.event.repository.name }}

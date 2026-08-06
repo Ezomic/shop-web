@@ -46,7 +46,7 @@ it('does not complete an order when the stripe session is unpaid', function (): 
     expect($order->fresh()->isPaid())->toBeFalse()
         ->and(Download::count())->toBe(0);
 
-    Mail::assertNothingSent();
+    Mail::assertNothingQueued();
 });
 
 it('completes an order when the stripe session is paid', function (): void {
@@ -64,7 +64,7 @@ it('completes an order when the stripe session is paid', function (): void {
     expect($order->fresh()->isPaid())->toBeTrue()
         ->and(Download::count())->toBe(1);
 
-    Mail::assertSent(OrderPaidMail::class);
+    Mail::assertQueued(OrderPaidMail::class);
 });
 
 it('refuses to touch an order belonging to another customer', function (): void {
@@ -83,7 +83,7 @@ it('refuses to touch an order belonging to another customer', function (): void 
     expect($order->fresh()->isPaid())->toBeFalse()
         ->and(Download::count())->toBe(0);
 
-    Mail::assertNothingSent();
+    Mail::assertNothingQueued();
 });
 
 it('renders the pending state when no session id is given', function (): void {
@@ -105,7 +105,7 @@ it('survives a session id stripe does not recognise', function (): void {
         ->get(route('checkout.success', ['session_id' => 'cs_test_bogus']))
         ->assertOk();
 
-    Mail::assertNothingSent();
+    Mail::assertNothingQueued();
 });
 
 it('requires a logged in customer', function (): void {
