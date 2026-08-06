@@ -6,27 +6,27 @@ namespace App\Http\Controllers;
 
 use App\Actions\CompleteOrderAction;
 use App\Models\Order;
+use App\Services\PaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Mollie\Laravel\Facades\Mollie;
 
 class MollieWebhookController extends Controller
 {
-    public function handle(Request $request, CompleteOrderAction $complete): Response
+    public function handle(Request $request, CompleteOrderAction $complete, PaymentService $payment): Response
     {
         $paymentId = $request->input('id');
 
-        if (! $paymentId) {
+        if (! is_string($paymentId) || $paymentId === '') {
             return response('Missing id', 400);
         }
 
-        $payment = Mollie::api()->payments->get($paymentId);
+        $status = $payment->molliePaymentStatus($paymentId);
 
-        if ($payment->isPaid()) {
+        if ($status?->isPaid()) {
             $order = Order::where('payment_id', $paymentId)->first();
 
             if ($order) {
-                $complete->handle($order, $payment->method);
+                $complete->handle($order, $status->method);
             }
         }
 

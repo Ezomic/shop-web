@@ -31,9 +31,11 @@ class CartController extends Controller
 
     public function applyCoupon(Request $request): JsonResponse
     {
-        $request->validate(['code' => ['required', 'string']]);
+        // Validated by hand: this endpoint is consumed by fetch(), and the app only renders
+        // validation exceptions as JSON under api/*, so a thrown one would come back as a redirect.
+        $code = $request->string('code')->trim()->toString();
 
-        $coupon = $this->cart->applyCoupon($request->string('code')->toString());
+        $coupon = $code === '' ? null : $this->cart->applyCoupon($code);
 
         if (! $coupon) {
             return response()->json(['error' => __('shop.coupon_invalid')], 422);

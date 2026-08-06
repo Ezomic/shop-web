@@ -180,16 +180,15 @@ php artisan test
 php artisan test --filter=ProductTest
 ```
 
-No feature tests exist yet beyond the default Laravel skeleton (`tests/Feature`, `tests/Unit`).
-When adding coverage, prioritize:
+The suite covers the money paths end to end: order creation and completion, coupon lifecycle and
+discount math, both webhooks (signature rejection, tampering, idempotency), the checkout return
+paths for both providers, the download lifecycle, admin products/orders/coupons/settings, and auth
+including throttling and guard separation.
 
-- `CreateOrderAction` / `CompleteOrderAction` — order + download creation logic
-- `CartService::totals()` — coupon discount math (percent vs fixed, expiry, max uses)
-- Webhook controllers — signature validation and idempotency (`CompleteOrderAction` no-ops if
-  the order is already paid)
-- `ProcessDownloadAction` — signed URL rejection, download counting
-
-Use `RefreshDatabase` and factories; no database mocking, per project convention.
+Factories exist for every model. Use `RefreshDatabase` and factories; no database mocking, per
+project convention. External payment APIs are the one thing that is mocked — bind a Mockery double
+for `PaymentService` (or `PaymentCredentials`) into the container rather than reaching for Stripe
+or Mollie in a test.
 
 ## Key gotchas
 
