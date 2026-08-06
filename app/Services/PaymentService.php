@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Models\Order;
 use Mollie\Laravel\Facades\Mollie;
 use Stripe\Checkout\Session as StripeSession;
+use Stripe\Exception\ApiErrorException;
 use Stripe\PaymentIntent;
 use Stripe\Refund;
 use Stripe\Stripe;
@@ -38,6 +39,25 @@ class PaymentService
         $order->update(['payment_id' => $session->id]);
 
         return $session->url;
+    }
+
+    public function stripeSessionStatus(string $sessionId): ?PaymentStatus
+    {
+        Stripe::setApiKey(config('services.stripe.secret'));
+
+        try {
+            $session = StripeSession::retrieve($sessionId);
+        } catch (ApiErrorException) {
+            return null;
+        }
+
+        $orderId = $session->metadata['order_id'] ?? null;
+
+        return new PaymentStatus(
+            orderId: $orderId === null ? null : (int) $orderId,
+            paid: $session->payment_status === 'paid',
+            method: $session->payment_method_types[0] ?? null,
+        );
     }
 
     public function createMolliePayment(Order $order): string
