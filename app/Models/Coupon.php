@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Carbon\CarbonImmutable;
+use Database\Factories\CouponFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -22,6 +24,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable(['code', 'type', 'amount', 'max_uses', 'uses_count', 'expires_at', 'active'])]
 class Coupon extends Model
 {
+    /** @use HasFactory<CouponFactory> */
+    use HasFactory;
+
     protected function casts(): array
     {
         return [

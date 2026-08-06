@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\RefundOrderAction;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
-use App\Services\PaymentService;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -57,15 +57,11 @@ class OrderController extends Controller
         ]);
     }
 
-    public function refund(Order $order, PaymentService $payment): RedirectResponse
+    public function refund(Order $order, RefundOrderAction $refund): RedirectResponse
     {
         abort_if(! $order->isPaid(), 422);
 
-        if ($order->payment_provider === 'stripe') {
-            $payment->refundStripe($order);
-        } else {
-            $payment->refundMollie($order);
-        }
+        $refund->handle($order);
 
         return back()->with('success', 'Order refunded.');
     }
