@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Models\Download;
 use App\Models\Order;
+use App\Models\OrderItem;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -15,7 +17,7 @@ class CustomerOrderController extends Controller
     {
         $orders = $request->user('customer')
             ->orders()
-            ->with('items.download')
+            ->with('items.downloads.productFile')
             ->latest()
             ->get()
             ->map(fn ($order) => [
@@ -33,7 +35,7 @@ class CustomerOrderController extends Controller
     {
         abort_if($order->customer_id !== $request->user('customer')->id, 403);
 
-        $order->load('items.download');
+        $order->load('items.downloads.productFile');
 
         return Inertia::render('orders/Show', [
             'order' => [
@@ -44,11 +46,15 @@ class CustomerOrderController extends Controller
                 'total' => $order->total,
                 'total_formatted' => $order->totalFormatted(),
                 'paid_at' => $order->paid_at?->toDateString(),
-                'items' => $order->items->map(fn ($item) => [
+                'items' => $order->items->map(fn (OrderItem $item): array => [
                     'id' => $item->id,
                     'product_name' => $item->product_name,
                     'price' => $item->price,
-                    'download_url' => $item->download?->url(),
+                    'downloads' => $item->downloads->map(fn (Download $download): array => [
+                        'id' => $download->id,
+                        'filename' => $download->productFile?->original_filename,
+                        'url' => $download->url(),
+                    ])->values()->all(),
                 ]),
             ],
         ]);

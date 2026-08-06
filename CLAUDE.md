@@ -77,8 +77,8 @@ npm run build                # or: npm run dev
 | `Customer` | `HasMany: Order` | separate `customer` guard; implements `MustVerifyEmail` |
 | `Coupon` | `HasMany: Order` | `isValid(): bool`, `discountFor(int): int` |
 | `Order` | `BelongsTo: Customer`, `BelongsTo: Coupon`, `HasMany: OrderItem` | `isPaid(): bool`, `totalFormatted()` |
-| `OrderItem` | `BelongsTo: Order`, `BelongsTo: Product`, `HasOne: Download` | price/name snapshots at time of purchase |
-| `Download` | `BelongsTo: OrderItem` | `token` uuid; `url()` returns signed route |
+| `OrderItem` | `BelongsTo: Order`, `BelongsTo: Product`, `HasMany: Download` | price/name snapshots at time of purchase |
+| `Download` | `BelongsTo: OrderItem`, `BelongsTo: ProductFile` | one row per purchased file; `token` uuid; `url()` returns signed route |
 | `User` | — | admin users only; `web` guard |
 
 ### Guards
@@ -93,7 +93,7 @@ npm run build                # or: npm run dev
 - **`CreateOrderAction`** — reads cart + coupon → creates `Order` + `OrderItem` rows. Deliberately does **not** touch `uses_count`
 - **`CompleteOrderAction`** — marks order paid, increments the coupon `uses_count`, generates `Download` uuid tokens, sends `OrderPaidMail`. No-ops on an already paid order, which is what keeps webhook replays idempotent
 - **`RefundOrderAction`** — refunds through `PaymentService` and releases the coupon use again
-- **`ProcessDownloadAction`** — validates signed URL, streams file from `shop` disk, increments `download_count`
+- **`ProcessDownloadAction`** — streams the `ProductFile` the `Download` points at, 404s if it is gone, increments `download_count`
 
 ### Middleware
 
@@ -131,6 +131,12 @@ Both webhooks excluded from CSRF in `bootstrap/app.php`.
 ### File storage
 
 Private `shop` disk (`storage/app/shop/`). Files never publicly accessible — always streamed via `ProcessDownloadAction`. Download URLs are Laravel signed routes (no expiry — permanent access).
+
+A `Download` points at the exact `ProductFile` that was bought, so replacing a product's file does
+not change what earlier buyers get (SHOP-8). Replacing a file detaches the old `ProductFile` from
+the product (`product_id` becomes null) instead of deleting it whenever a `Download` still
+references it. `order_items.product_id` is `restrictOnDelete`, so a product that has been ordered
+cannot be deleted at all — the admin is told to set it to draft instead.
 
 ### Frontend pages (Inertia + Vue)
 

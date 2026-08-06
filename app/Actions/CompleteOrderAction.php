@@ -27,18 +27,23 @@ class CompleteOrderAction
         // Counted here rather than at order creation: an abandoned checkout must not burn a use.
         $order->coupon?->increment('uses_count');
 
-        $order->load('items.download');
+        $order->load('items.downloads', 'items.product.files');
 
         foreach ($order->items as $item) {
-            if (! $item->download) {
-                Download::create([
-                    'order_item_id' => $item->id,
-                    'token' => Str::uuid()->toString(),
-                ]);
+            $existing = $item->downloads->pluck('product_file_id')->all();
+
+            foreach ($item->product->files as $file) {
+                if (! in_array($file->id, $existing, strict: true)) {
+                    Download::create([
+                        'order_item_id' => $item->id,
+                        'product_file_id' => $file->id,
+                        'token' => Str::uuid()->toString(),
+                    ]);
+                }
             }
         }
 
-        $order->load('items.download', 'customer');
+        $order->load('items.downloads.productFile', 'customer');
 
         Mail::to($order->customer->email)->send(new OrderPaidMail($order));
     }

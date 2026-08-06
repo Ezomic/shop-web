@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\ProductFile;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -66,15 +67,7 @@ class ProductController extends Controller
         ]);
 
         if ($request->hasFile('file')) {
-            $file = $request->file('file');
-            $path = $file->store('products', 'shop');
-            ProductFile::create([
-                'product_id' => $product->id,
-                'disk' => 'shop',
-                'path' => $path,
-                'original_filename' => $file->getClientOriginalName(),
-                'size' => $file->getSize(),
-            ]);
+            $this->storeFile($product, $request->file('file'));
         }
 
         return redirect()->route('admin.products.index')->with('success', 'Product created.');
@@ -119,20 +112,8 @@ class ProductController extends Controller
         ]);
 
         if ($request->hasFile('file')) {
-            $product->files()->each(function (ProductFile $pf): void {
-                Storage::disk($pf->disk)->delete($pf->path);
-                $pf->delete();
-            });
-
-            $file = $request->file('file');
-            $path = $file->store('products', 'shop');
-            ProductFile::create([
-                'product_id' => $product->id,
-                'disk' => 'shop',
-                'path' => $path,
-                'original_filename' => $file->getClientOriginalName(),
-                'size' => $file->getSize(),
-            ]);
+            $this->releaseFiles($product);
+            $this->storeFile($product, $request->file('file'));
         }
 
         return redirect()->route('admin.products.index')->with('success', 'Product updated.');
@@ -140,14 +121,48 @@ class ProductController extends Controller
 
     public function destroy(Product $product): RedirectResponse
     {
-        $product->files()->each(function (ProductFile $pf): void {
-            Storage::disk($pf->disk)->delete($pf->path);
-            $pf->delete();
-        });
+        // order_items.product_id is restrictOnDelete, so a sold product cannot be removed without
+        // taking the order history with it. Unpublishing is the way to retire one.
+        if ($product->orderItems()->exists()) {
+            return back()->withErrors([
+                'product' => 'This product has been ordered. Set it to draft instead of deleting it.',
+            ]);
+        }
+
+        $this->releaseFiles($product);
 
         $product->delete();
 
         return redirect()->route('admin.products.index')->with('success', 'Product deleted.');
+    }
+
+    /**
+     * Drop the product's files, except any a paid download still points at. Those are detached
+     * from the product instead of deleted, so earlier buyers keep the file they actually bought.
+     */
+    private function releaseFiles(Product $product): void
+    {
+        $product->files()->each(function (ProductFile $file): void {
+            if ($file->downloads()->exists()) {
+                $file->update(['product_id' => null]);
+
+                return;
+            }
+
+            Storage::disk($file->disk)->delete($file->path);
+            $file->delete();
+        });
+    }
+
+    private function storeFile(Product $product, UploadedFile $upload): void
+    {
+        ProductFile::create([
+            'product_id' => $product->id,
+            'disk' => 'shop',
+            'path' => $upload->store('products', 'shop'),
+            'original_filename' => $upload->getClientOriginalName(),
+            'size' => $upload->getSize(),
+        ]);
     }
 
     public function reorder(Request $request): RedirectResponse
