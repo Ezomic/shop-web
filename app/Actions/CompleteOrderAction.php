@@ -24,6 +24,9 @@ class CompleteOrderAction
             'payment_method' => $paymentMethod,
         ]);
 
+        // Counted here rather than at order creation: an abandoned checkout must not burn a use.
+        $order->coupon?->increment('uses_count');
+
         $order->load('items.download');
 
         foreach ($order->items as $item) {

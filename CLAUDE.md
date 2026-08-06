@@ -90,8 +90,9 @@ npm run build                # or: npm run dev
 
 - **`CartService`** — session-backed cart: `add`, `remove`, `contents`, `applyCoupon`, `totals`
 - **`PaymentService`** — `createStripeSession(Order)`, `createMolliePayment(Order)`, `refundStripe`, `refundMollie`
-- **`CreateOrderAction`** — validates cart + coupon → creates `Order` + `OrderItem` rows, decrements coupon `uses_count`
-- **`CompleteOrderAction`** — marks order paid, generates `Download` uuid tokens, sends `OrderPaidMail`
+- **`CreateOrderAction`** — reads cart + coupon → creates `Order` + `OrderItem` rows. Deliberately does **not** touch `uses_count`
+- **`CompleteOrderAction`** — marks order paid, increments the coupon `uses_count`, generates `Download` uuid tokens, sends `OrderPaidMail`. No-ops on an already paid order, which is what keeps webhook replays idempotent
+- **`RefundOrderAction`** — refunds through `PaymentService` and releases the coupon use again
 - **`ProcessDownloadAction`** — validates signed URL, streams file from `shop` disk, increments `download_count`
 
 ### Middleware

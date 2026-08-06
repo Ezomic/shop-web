@@ -37,10 +37,6 @@ class CreateOrderAction
             ]);
         }
 
-        if ($totals['coupon']) {
-            $totals['coupon']->increment('uses_count');
-        }
-
         return $order->load('items');
     }
 }
