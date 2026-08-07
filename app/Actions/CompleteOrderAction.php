@@ -16,7 +16,7 @@ class CompleteOrderAction
         private readonly AllocateInvoiceNumberAction $allocateInvoiceNumber,
     ) {}
 
-    public function handle(Order $order, ?string $paymentMethod = null): void
+    public function handle(Order $order, ?string $paymentMethod = null, ?string $country = null): void
     {
         if ($order->isPaid()) {
             return;
@@ -26,6 +26,11 @@ class CompleteOrderAction
             'status' => 'paid',
             'paid_at' => now(),
             'payment_method' => $paymentMethod,
+            // A provider sourced country is third party evidence of where the customer is.
+            // Without one we fall back to the home country and say so, rather than dressing a
+            // guess up as evidence.
+            'country' => $country ?? config('shop.vat.home_country'),
+            'country_source' => $country === null ? 'fallback' : $order->payment_provider,
         ]);
 
         // Counted here rather than at order creation: an abandoned checkout must not burn a use.

@@ -58,6 +58,8 @@ class OrderController extends Controller
                 'coupon_code' => $order->coupon?->code,
                 'paid_at' => $order->paid_at?->toDateString(),
                 'invoice_number' => $order->invoice_number,
+                'country' => $order->country,
+                'country_source' => $order->country_source,
                 'items' => $order->items->map(fn (OrderItem $item): array => [
                     'id' => $item->id,
                     'product_name' => $item->product_name,

@@ -36,7 +36,7 @@ class StripeWebhookController extends Controller
             $order = Order::find((int) $session->metadata['order_id']);
 
             if ($order) {
-                $complete->handle($order, $session->payment_method_types[0] ?? null);
+                $complete->handle($order, $session->payment_method_types[0] ?? null, $session->customer_details->address->country ?? null);
             }
         }
 

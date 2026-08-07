@@ -18,6 +18,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int|null $coupon_id
  * @property string $status
  * @property string $currency
+ * @property string|null $country
+ * @property string|null $country_source
+ * @property string|null $ip_address
  * @property int $subtotal
  * @property int $discount
  * @property int $total
@@ -35,6 +38,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 #[Fillable([
     'customer_id', 'coupon_id', 'status', 'currency',
+    'country', 'country_source', 'ip_address',
     'subtotal', 'discount', 'total',
     'vat_rate', 'vat_amount', 'net_total',
     'payment_provider', 'payment_id', 'payment_method', 'paid_at',
