@@ -60,7 +60,7 @@ class CheckoutController extends Controller
         }
 
         $customer = Auth::guard('customer')->user();
-        $order = $this->createOrder->handle($customer, $request->string('provider')->toString());
+        $order = $this->createOrder->handle($customer, $request->string('provider')->toString(), $request->ip());
 
         $url = $request->input('provider') === 'stripe'
             ? $this->payment->createStripeSession($order)
@@ -86,7 +86,7 @@ class CheckoutController extends Controller
                 // The webhook stays the source of truth; this only shortens the wait for the
                 // customer who is already looking at the page.
                 if ($status->isPaid()) {
-                    $complete->handle($order, $status->method);
+                    $complete->handle($order, $status->method, $status->country);
                 }
             }
         }
@@ -113,7 +113,7 @@ class CheckoutController extends Controller
             : $this->payment->molliePaymentStatus($order->payment_id);
 
         if ($status?->isPaid()) {
-            $complete->handle($order, $status->method);
+            $complete->handle($order, $status->method, $status->country);
         }
 
         if ($status?->hasFailed() && ! $order->isPaid()) {

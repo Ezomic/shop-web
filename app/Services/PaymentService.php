@@ -65,6 +65,7 @@ class PaymentService
                 default => PaymentState::Pending,
             },
             method: $session->payment_method_types[0] ?? null,
+            country: $session->customer_details->address->country ?? null,
         );
     }
 
@@ -86,6 +87,7 @@ class PaymentService
                 default => PaymentState::Pending,
             },
             method: $payment->method,
+            country: $payment->countryCode ?? null,
         );
     }
 

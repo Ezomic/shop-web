@@ -26,7 +26,7 @@ class MollieWebhookController extends Controller
             $order = Order::where('payment_id', $paymentId)->first();
 
             if ($order) {
-                $complete->handle($order, $status->method);
+                $complete->handle($order, $status->method, $status->country);
             }
         }
 

@@ -28,6 +28,8 @@ interface Order {
     total: number
     total_formatted: string
     invoice_number: string | null
+    country: string | null
+    country_source: string | null
     vat_rate: number
     vat_amount: number
     net_total: number
@@ -77,6 +79,10 @@ function reissue(downloadId: number) {
             <div><strong>Provider:</strong> {{ order.payment_provider }} / {{ order.payment_method }}</div>
             <div v-if="order.coupon_code"><strong>Coupon:</strong> {{ order.coupon_code }}</div>
             <div v-if="order.paid_at"><strong>Paid:</strong> {{ order.paid_at }}</div>
+            <div v-if="order.country">
+                <strong>Country:</strong> {{ order.country }}
+                <span class="text-muted-foreground">({{ order.country_source }})</span>
+            </div>
         </div>
 
         <div class="mb-4 rounded-lg border p-4">

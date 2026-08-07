@@ -168,6 +168,7 @@ pages/
 |---|---|
 | `SHOP_VAT_RATE` | VAT percentage extracted from the VAT-inclusive price (default 21) |
 | `SHOP_SUPPLIER_*` | Name, address, VAT and KvK number printed on invoices |
+| `SHOP_HOME_COUNTRY` | Country recorded when the provider gives none, flagged as `fallback` (default NL) |
 | `FLARE_ENABLED` / `FLARE_URL` / `FLARE_KEY` | Error reporting to the self-hosted flare instance (`php artisan flare:test`) |
 | `SHOP_DOWNLOAD_LINK_TTL_DAYS` | Days an emailed download link stays valid (0 disables expiry) |
 | `SHOP_DOWNLOAD_MAX_USES` | Times a single download link may be used (0 disables the cap) |

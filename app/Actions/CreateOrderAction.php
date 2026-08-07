@@ -17,7 +17,7 @@ class CreateOrderAction
         private readonly VatCalculator $vat,
     ) {}
 
-    public function handle(Customer $customer, string $provider): Order
+    public function handle(Customer $customer, string $provider, ?string $ipAddress = null): Order
     {
         $totals = $this->cart->totals();
         $products = $this->cart->contents()->values();
@@ -34,6 +34,7 @@ class CreateOrderAction
             'coupon_id' => $totals['coupon']?->id,
             'status' => 'pending',
             'currency' => 'EUR',
+            'ip_address' => $ipAddress,
             'subtotal' => $totals['subtotal'],
             'discount' => $totals['discount'],
             'total' => $totals['total'],

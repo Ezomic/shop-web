@@ -10,6 +10,7 @@ final readonly class PaymentStatus
         public ?int $orderId,
         public PaymentState $state,
         public ?string $method,
+        public ?string $country = null,
     ) {}
 
     public function isPaid(): bool

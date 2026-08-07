@@ -16,6 +16,12 @@ return [
          * difference while over charging only costs margin. Confirm, then change this one value.
          */
         'rate' => (int) env('SHOP_VAT_RATE', 21),
+
+        /*
+         * Used as the order country when the payment provider tells us nothing. Recorded with a
+         * source of "fallback" rather than being passed off as evidence, because it is not.
+         */
+        'home_country' => env('SHOP_HOME_COUNTRY', 'NL'),
     ],
 
     /*
