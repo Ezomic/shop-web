@@ -9,6 +9,7 @@ use App\Actions\CreateOrderAction;
 use App\Models\Order;
 use App\Services\CartService;
 use App\Services\PaymentService;
+use App\Services\VatCalculator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -21,6 +22,7 @@ class CheckoutController extends Controller
         private readonly CartService $cart,
         private readonly CreateOrderAction $createOrder,
         private readonly PaymentService $payment,
+        private readonly VatCalculator $vat,
     ) {}
 
     public function index(): Response|RedirectResponse
@@ -41,6 +43,8 @@ class CheckoutController extends Controller
             'subtotal' => $totals['subtotal'],
             'discount' => $totals['discount'],
             'total' => $totals['total'],
+            'vat_rate' => $this->vat->rate(),
+            'vat_amount' => $this->vat->vatOn($totals['total']),
             'coupon' => $totals['coupon'] ? ['code' => $totals['coupon']->code] : null,
         ]);
     }

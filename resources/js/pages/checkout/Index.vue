@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import ShopLayout from '@/layouts/ShopLayout.vue'
 import { router, useForm } from '@inertiajs/vue3'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -24,6 +24,8 @@ const props = defineProps<{
     subtotal: number
     discount: number
     total: number
+    vat_rate: number
+    vat_amount: number
     coupon: Coupon | null
 }>()
 
@@ -33,6 +35,13 @@ const couponError = ref('')
 const appliedCoupon = ref(props.coupon)
 const currentDiscount = ref(props.discount)
 const currentTotal = ref(props.total)
+
+// Prices include VAT, so this is the share of the total already inside it, not an addition.
+const currentVat = computed(() =>
+    props.vat_rate <= 0
+        ? 0
+        : Math.round((currentTotal.value * props.vat_rate) / (100 + props.vat_rate)),
+)
 
 function formatCents(cents: number) {
     return '€ ' + (cents / 100).toFixed(2).replace('.', ',')
@@ -88,6 +97,10 @@ function submit() {
             <div class="flex justify-between font-bold">
                 <span>Total</span>
                 <span>{{ formatCents(currentTotal) }}</span>
+            </div>
+            <div v-if="vat_rate > 0" class="flex justify-between text-xs text-muted-foreground">
+                <span>Includes {{ vat_rate }}% VAT</span>
+                <span>{{ formatCents(currentVat) }}</span>
             </div>
         </div>
 

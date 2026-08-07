@@ -27,6 +27,9 @@ interface Order {
     discount: number
     total: number
     total_formatted: string
+    vat_rate: number
+    vat_amount: number
+    net_total: number
     payment_provider: string
     payment_method: string | null
     coupon_code: string | null
@@ -98,6 +101,10 @@ function reissue(downloadId: number) {
             </div>
             <div class="flex justify-between font-bold">
                 <span>Total</span><span>{{ order.total_formatted }}</span>
+            </div>
+            <div v-if="order.vat_rate > 0" class="flex justify-between text-xs text-muted-foreground">
+                <span>Net {{ formatCents(order.net_total) }} · {{ order.vat_rate }}% VAT</span>
+                <span>{{ formatCents(order.vat_amount) }}</span>
             </div>
         </div>
 

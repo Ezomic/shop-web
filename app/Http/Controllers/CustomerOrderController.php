@@ -57,6 +57,9 @@ class CustomerOrderController extends Controller
                 'discount' => $order->discount,
                 'total' => $order->total,
                 'total_formatted' => $order->totalFormatted(),
+                'vat_rate' => $order->vat_rate,
+                'vat_amount' => $order->vat_amount,
+                'net_total' => $order->net_total,
                 'paid_at' => $order->paid_at?->toDateString(),
                 'items' => $order->items->map(fn (OrderItem $item): array => [
                     'id' => $item->id,

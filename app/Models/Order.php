@@ -21,6 +21,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $subtotal
  * @property int $discount
  * @property int $total
+ * @property int $vat_rate
+ * @property int $vat_amount
+ * @property int $net_total
  * @property string $payment_provider
  * @property string|null $payment_id
  * @property string|null $payment_method
@@ -31,6 +34,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable([
     'customer_id', 'coupon_id', 'status', 'currency',
     'subtotal', 'discount', 'total',
+    'vat_rate', 'vat_amount', 'net_total',
     'payment_provider', 'payment_id', 'payment_method', 'paid_at',
 ])]
 class Order extends Model

@@ -36,6 +36,16 @@
                 <td style="padding: 8px; text-align: right; font-weight: bold;">{{ __('shop.total') }}</td>
                 <td style="padding: 8px; text-align: right; font-weight: bold;">{{ $order->totalFormatted() }}</td>
             </tr>
+            @if ($order->vat_rate > 0)
+            <tr>
+                <td style="padding: 8px; text-align: right; color: #666; font-size: 12px;">
+                    {{ __('mail.includes_vat', ['rate' => $order->vat_rate]) }}
+                </td>
+                <td style="padding: 8px; text-align: right; color: #666; font-size: 12px;">
+                    € {{ number_format($order->vat_amount / 100, 2, ',', '.') }}
+                </td>
+            </tr>
+            @endif
         </tfoot>
     </table>
 

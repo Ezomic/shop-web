@@ -164,6 +164,7 @@ pages/
 
 | Variable | Purpose |
 |---|---|
+| `SHOP_VAT_RATE` | VAT percentage extracted from the VAT-inclusive price (default 21) |
 | `FLARE_ENABLED` / `FLARE_URL` / `FLARE_KEY` | Error reporting to the self-hosted flare instance (`php artisan flare:test`) |
 | `SHOP_DOWNLOAD_LINK_TTL_DAYS` | Days an emailed download link stays valid (0 disables expiry) |
 | `SHOP_DOWNLOAD_MAX_USES` | Times a single download link may be used (0 disables the cap) |
@@ -204,6 +205,11 @@ or Mollie in a test.
    mints a fresh link on every render, so only emailed links go stale; customers can also re-issue
    a link themselves and admins can regenerate one or resend the whole order email (SHOP-10).
 3. **Price is always in cents** (int). Format with `priceFormatted()` on `Product` or `totalFormatted()` on `Order`.
+   Prices are **VAT inclusive**: `Product::price` is the gross the customer pays, and `VatCalculator`
+   splits it into net and VAT rather than adding anything on top. `CreateOrderAction` shares the
+   discount across lines by largest remainder, so `sum(items.net_price + items.vat_amount)` always
+   equals `orders.total`. The rate is `SHOP_VAT_RATE`, snapshotted per order and per item so a later
+   rate change never rewrites history (SHOP-15).
 4. **Webhook CSRF exclusion** — both `/webhooks/stripe` and `/webhooks/mollie` are in the `validateCsrfTokens` except list in `bootstrap/app.php`.
 5. **Translatable fields** — `Product::name` and `Product::description` are each their own JSON
    column holding `{"en": "...", "nl": "..."}`, which is the shape spatie expects. Assign them as

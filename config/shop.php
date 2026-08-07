@@ -4,6 +4,20 @@ declare(strict_types=1);
 
 return [
 
+    'vat' => [
+
+        /*
+         * VAT percentage applied to every order. Prices are VAT inclusive, so this splits the
+         * gross price the customer pays into net and VAT rather than adding anything on top.
+         *
+         * Defaults to the Dutch standard rate of 21 deliberately. A downloadable script may well
+         * qualify as a digital publication at the reduced 9 percent rate, but that is a
+         * classification call for an accountant, and under charging leaves you owing the
+         * difference while over charging only costs margin. Confirm, then change this one value.
+         */
+        'rate' => (int) env('SHOP_VAT_RATE', 21),
+    ],
+
     'downloads' => [
 
         /*
