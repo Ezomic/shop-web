@@ -28,6 +28,7 @@ interface Order {
     discount: number
     total: number
     total_formatted: string
+    invoice_number: string | null
     vat_rate: number
     vat_amount: number
     net_total: number
@@ -103,6 +104,11 @@ function reissue(downloadId: number) {
             </div>
         </div>
 
-        <p v-if="order.paid_at" class="text-sm text-muted-foreground">Paid on {{ order.paid_at }}</p>
+        <div class="flex items-center justify-between">
+            <p v-if="order.paid_at" class="text-sm text-muted-foreground">Paid on {{ order.paid_at }}</p>
+            <Button v-if="order.invoice_number" variant="outline" size="sm" as-child>
+                <a :href="route('orders.invoice', order.id)">Invoice {{ order.invoice_number }}</a>
+            </Button>
+        </div>
     </div>
 </template>

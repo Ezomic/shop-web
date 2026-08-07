@@ -11,10 +11,12 @@ use App\Mail\OrderPaidMail;
 use App\Models\Download;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Services\InvoiceRenderer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class OrderController extends Controller
 {
@@ -55,6 +57,7 @@ class OrderController extends Controller
                 'payment_method' => $order->payment_method,
                 'coupon_code' => $order->coupon?->code,
                 'paid_at' => $order->paid_at?->toDateString(),
+                'invoice_number' => $order->invoice_number,
                 'items' => $order->items->map(fn (OrderItem $item): array => [
                     'id' => $item->id,
                     'product_name' => $item->product_name,
@@ -67,6 +70,13 @@ class OrderController extends Controller
                 ]),
             ],
         ]);
+    }
+
+    public function invoice(Order $order, InvoiceRenderer $invoices): SymfonyResponse
+    {
+        abort_if($order->invoice_number === null, 404);
+
+        return $invoices->pdf($order)->download($invoices->filename($order));
     }
 
     public function resend(Order $order): RedirectResponse

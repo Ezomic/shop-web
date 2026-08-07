@@ -18,6 +18,20 @@ return [
         'rate' => (int) env('SHOP_VAT_RATE', 21),
     ],
 
+    /*
+     * Printed on every invoice. A Dutch invoice has to carry the supplier name, address, VAT
+     * number and KvK number, so these are not decoration.
+     */
+    'supplier' => [
+        'name' => env('SHOP_SUPPLIER_NAME', 'Thijssen Software'),
+        'address' => env('SHOP_SUPPLIER_ADDRESS', ''),
+        'postcode_city' => env('SHOP_SUPPLIER_POSTCODE_CITY', ''),
+        'country' => env('SHOP_SUPPLIER_COUNTRY', 'Nederland'),
+        'vat_number' => env('SHOP_SUPPLIER_VAT_NUMBER', ''),
+        'coc_number' => env('SHOP_SUPPLIER_COC_NUMBER', ''),
+        'email' => env('SHOP_SUPPLIER_EMAIL', 'noreply@thijssensoftware.nl'),
+    ],
+
     'downloads' => [
 
         /*

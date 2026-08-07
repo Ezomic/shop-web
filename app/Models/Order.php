@@ -28,6 +28,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $payment_id
  * @property string|null $payment_method
  * @property CarbonImmutable|null $paid_at
+ * @property string|null $invoice_number
+ * @property CarbonImmutable|null $invoiced_at
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  */
@@ -36,6 +38,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'subtotal', 'discount', 'total',
     'vat_rate', 'vat_amount', 'net_total',
     'payment_provider', 'payment_id', 'payment_method', 'paid_at',
+    'invoice_number', 'invoiced_at',
 ])]
 class Order extends Model
 {
@@ -44,7 +47,7 @@ class Order extends Model
 
     protected function casts(): array
     {
-        return ['paid_at' => 'datetime'];
+        return ['paid_at' => 'datetime', 'invoiced_at' => 'datetime'];
     }
 
     /**

@@ -97,6 +97,8 @@ npm run build                # or: npm run dev
 - **`PaymentService`** — `createStripeSession(Order)`, `createMolliePayment(Order)`, `refundStripe`, `refundMollie`
 - **`CreateOrderAction`** — reads cart + coupon → creates `Order` + `OrderItem` rows. Deliberately does **not** touch `uses_count`
 - **`CompleteOrderAction`** — marks order paid, increments the coupon `uses_count`, generates `Download` uuid tokens, queues `OrderPaidMail`. No-ops on an already paid order, which is what keeps webhook replays idempotent
+- **`AllocateInvoiceNumberAction`** — hands out the next `YYYY-NNNN` invoice number. Only paid orders get one, so the sequence has no gaps; the unique index plus a retry is what makes it safe under concurrent webhooks
+- **`InvoiceRenderer`** — renders the invoice PDF on demand from the order snapshot. Invoices are never stored as files, so there is nothing extra to back up and no way for a later product edit to change an issued invoice
 - **`RefundOrderAction`** — refunds through `PaymentService` and releases the coupon use again
 - **`ProcessDownloadAction`** — streams the `ProductFile` the `Download` points at, 404s if it is gone, increments `download_count`
 
@@ -165,6 +167,7 @@ pages/
 | Variable | Purpose |
 |---|---|
 | `SHOP_VAT_RATE` | VAT percentage extracted from the VAT-inclusive price (default 21) |
+| `SHOP_SUPPLIER_*` | Name, address, VAT and KvK number printed on invoices |
 | `FLARE_ENABLED` / `FLARE_URL` / `FLARE_KEY` | Error reporting to the self-hosted flare instance (`php artisan flare:test`) |
 | `SHOP_DOWNLOAD_LINK_TTL_DAYS` | Days an emailed download link stays valid (0 disables expiry) |
 | `SHOP_DOWNLOAD_MAX_USES` | Times a single download link may be used (0 disables the cap) |

@@ -79,6 +79,7 @@ Route::middleware('auth:customer')->group(function (): void {
 
     Route::get('/orders', [CustomerOrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [CustomerOrderController::class, 'show'])->name('orders.show');
+    Route::get('/orders/{order}/invoice', [CustomerOrderController::class, 'invoice'])->name('orders.invoice');
     Route::post('/orders/{order}/downloads/{download}/reissue', [CustomerOrderController::class, 'reissue'])
         ->name('orders.downloads.reissue');
 });
@@ -100,6 +101,7 @@ Route::middleware('admin')->prefix('admin')->name('admin.')->group(function (): 
 
     Route::resource('orders', AdminOrderController::class)->only(['index', 'show']);
     Route::post('orders/{order}/refund', [AdminOrderController::class, 'refund'])->name('orders.refund');
+    Route::get('orders/{order}/invoice', [AdminOrderController::class, 'invoice'])->name('orders.invoice');
     Route::post('orders/{order}/resend', [AdminOrderController::class, 'resend'])->name('orders.resend');
     Route::post('orders/{order}/downloads/{download}/reissue', [AdminOrderController::class, 'reissue'])
         ->name('orders.downloads.reissue');
