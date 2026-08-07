@@ -107,3 +107,41 @@ Not deployed yet. What a first production release needs, beyond this repo:
 
 `.github/workflows/deploy.yml` performs the deploy but is **`workflow_dispatch` only** — it never
 fires on a merge, so nothing happens until the steps above are done and it is run by hand.
+
+## Backups and restore
+
+`php artisan shop:backup` writes two artefacts into `SHOP_BACKUP_PATH` (default
+`storage/backups`), and the scheduler runs it nightly at 03:20:
+
+- `database-<stamp>.sqlite` — produced with `VACUUM INTO`, not a file copy. The database runs in
+  WAL mode, so copying the file alone can capture a torn state missing whatever is still in the
+  `-wal` sidecar.
+- `product-files-<stamp>.tar.gz` — the contents of `storage/app/shop`, which *is* the product.
+
+Anything older than `SHOP_BACKUP_KEEP_DAYS` (default 14) is pruned.
+
+### Offsite
+
+Local backups protect against a bad migration or an accidental delete. They do **not** survive
+losing the droplet. Set `SHOP_BACKUP_OFFSITE_DISK` to a configured filesystem disk (an S3
+compatible bucket) and every artefact is copied there as well.
+
+The droplet itself has DigitalOcean backups enabled, which is a weekly, whole-machine safety net,
+not a substitute for this.
+
+### Restoring
+
+```bash
+# Database
+sudo systemctl stop shop-web-queue
+cp storage/backups/database-<stamp>.sqlite database/database.sqlite
+chgrp www-data database/database.sqlite && chmod 664 database/database.sqlite
+php artisan migrate --force          # only if the backup predates a schema change
+sudo systemctl start shop-web-queue
+
+# Product files
+tar -xzf storage/backups/product-files-<stamp>.tar.gz -C storage/app --strip-components=0
+```
+
+Verify a restore by checking the order count and that a download still streams, not just that the
+files exist.
