@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
+
+// Nightly, before the working day, so a bad morning still has last night's copy.
+Schedule::command('shop:backup')->dailyAt('03:20')->withoutOverlapping();

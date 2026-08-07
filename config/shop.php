@@ -38,6 +38,24 @@ return [
         'email' => env('SHOP_SUPPLIER_EMAIL', 'noreply@thijssensoftware.nl'),
     ],
 
+    'backups' => [
+
+        /*
+         * Where nightly backups land. Local by default: it is off the app tree but still on the
+         * same droplet, so it protects against a bad migration or an accidental delete, not
+         * against losing the machine. Set the offsite disk below for that.
+         */
+        'path' => env('SHOP_BACKUP_PATH', storage_path('backups')),
+
+        'keep_days' => (int) env('SHOP_BACKUP_KEEP_DAYS', 14),
+
+        /*
+         * Filesystem disk to copy each backup to, for example an S3 compatible bucket. Null keeps
+         * everything on the droplet, which is the case a droplet level failure does not survive.
+         */
+        'offsite_disk' => env('SHOP_BACKUP_OFFSITE_DISK'),
+    ],
+
     'downloads' => [
 
         /*
