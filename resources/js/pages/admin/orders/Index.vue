@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AdminLayout from '@/layouts/AdminLayout.vue'
 import { Link } from '@inertiajs/vue3'
+import { computed } from 'vue'
 import { Badge } from '@/components/ui/badge'
 
 defineOptions({ layout: AdminLayout })
@@ -21,12 +22,55 @@ interface PaginatedOrders {
     last_page: number
 }
 
-defineProps<{ orders: PaginatedOrders }>()
+interface VatThreshold {
+    cross_border_total: number
+    threshold: number
+    warning_at: number
+    home_country: string
+}
+
+const props = defineProps<{ orders: PaginatedOrders; vatThreshold: VatThreshold }>()
+
+function formatCents(cents: number) {
+    return '€ ' + (cents / 100).toFixed(2).replace('.', ',')
+}
+
+const thresholdShare = computed(() =>
+    props.vatThreshold.threshold <= 0
+        ? 0
+        : Math.min(100, (props.vatThreshold.cross_border_total / props.vatThreshold.threshold) * 100),
+)
+
+const thresholdReached = computed(
+    () => props.vatThreshold.cross_border_total >= props.vatThreshold.warning_at,
+)
 </script>
 
 <template>
     <div>
         <h1 class="mb-6 text-2xl font-bold">Orders</h1>
+
+        <div
+            class="mb-6 rounded-lg border p-4 text-sm"
+            :class="thresholdReached ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/30' : ''"
+        >
+            <div class="flex items-center justify-between">
+                <span>
+                    Cross border sales this year (outside {{ vatThreshold.home_country }})
+                </span>
+                <span class="font-medium">
+                    {{ formatCents(vatThreshold.cross_border_total) }} /
+                    {{ formatCents(vatThreshold.threshold) }}
+                </span>
+            </div>
+            <div class="mt-2 h-1.5 w-full rounded bg-muted">
+                <div class="h-1.5 rounded bg-foreground/60" :style="{ width: thresholdShare + '%' }" />
+            </div>
+            <p v-if="thresholdReached" class="mt-2 text-xs">
+                Past {{ formatCents(vatThreshold.warning_at) }}. Destination based VAT and an OSS
+                registration become due at the threshold. See SHOP-18.
+            </p>
+        </div>
         <div class="rounded-lg border">
             <table class="w-full text-sm">
                 <thead class="border-b bg-muted/40">

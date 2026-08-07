@@ -22,6 +22,23 @@ return [
          * source of "fallback" rather than being passed off as evidence, because it is not.
          */
         'home_country' => env('SHOP_HOME_COUNTRY', 'NL'),
+
+        /*
+         * Cross border B2C sales past this in a calendar year mean VAT is due at the customer
+         * country rate and the shop has to register for the Union One Stop Shop. In cents.
+         */
+        'threshold' => (int) env('SHOP_VAT_THRESHOLD', 1000000),
+
+        /*
+         * Warn here first, so there is room to build the OSS work before the threshold bites
+         * rather than discovering it afterwards. See SHOP-18.
+         */
+        'threshold_warning' => (int) env('SHOP_VAT_THRESHOLD_WARNING', 750000),
+
+        /*
+         * Who hears about it. Falls back to the supplier address.
+         */
+        'threshold_notify' => env('SHOP_VAT_THRESHOLD_NOTIFY'),
     ],
 
     /*

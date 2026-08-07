@@ -12,6 +12,7 @@ use App\Models\Download;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Services\InvoiceRenderer;
+use App\Services\VatThresholdMonitor;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
@@ -20,11 +21,17 @@ use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class OrderController extends Controller
 {
-    public function index(): Response
+    public function index(VatThresholdMonitor $monitor): Response
     {
         $orders = Order::with('customer')->latest()->paginate(25);
 
         return Inertia::render('admin/orders/Index', [
+            'vatThreshold' => [
+                'cross_border_total' => $monitor->crossBorderTotal(),
+                'threshold' => (int) config('shop.vat.threshold'),
+                'warning_at' => (int) config('shop.vat.threshold_warning'),
+                'home_country' => $monitor->homeCountry(),
+            ],
             'orders' => $orders->through(fn ($o) => [
                 'id' => $o->id,
                 'customer_name' => $o->customer->name,
