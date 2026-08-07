@@ -27,6 +27,7 @@ interface Order {
     discount: number
     total: number
     total_formatted: string
+    invoice_number: string | null
     vat_rate: number
     vat_amount: number
     net_total: number
@@ -109,6 +110,9 @@ function reissue(downloadId: number) {
         </div>
 
         <div class="flex items-center gap-3">
+            <Button v-if="order.invoice_number" variant="outline" as-child>
+                <a :href="route('admin.orders.invoice', order.id)">Invoice {{ order.invoice_number }}</a>
+            </Button>
             <Button v-if="order.status === 'paid'" variant="outline" @click="resend">
                 Resend order email
             </Button>

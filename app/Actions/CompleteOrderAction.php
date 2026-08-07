@@ -12,6 +12,10 @@ use Illuminate\Support\Str;
 
 class CompleteOrderAction
 {
+    public function __construct(
+        private readonly AllocateInvoiceNumberAction $allocateInvoiceNumber,
+    ) {}
+
     public function handle(Order $order, ?string $paymentMethod = null): void
     {
         if ($order->isPaid()) {
@@ -26,6 +30,10 @@ class CompleteOrderAction
 
         // Counted here rather than at order creation: an abandoned checkout must not burn a use.
         $order->coupon?->increment('uses_count');
+
+        // Same reasoning for the invoice number: only a paid order gets one, so the sequence
+        // never has holes.
+        $this->allocateInvoiceNumber->handle($order);
 
         $order->load('items.downloads', 'items.product.files');
 
