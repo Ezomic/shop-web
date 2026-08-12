@@ -13,7 +13,7 @@ interface Product {
     description: string
     price: number
     price_formatted: string
-    preview_url: string | null
+    cover_url: string | null
     in_cart: boolean
 }
 
@@ -35,8 +35,8 @@ function removeFromCart(product: Product) {
         <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             <div v-for="product in products" :key="product.id" class="rounded-lg border p-6">
                 <img
-                    v-if="product.preview_url"
-                    :src="product.preview_url"
+                    v-if="product.cover_url"
+                    :src="product.cover_url"
                     :alt="product.name"
                     class="mb-4 w-full rounded object-cover"
                     style="height: 160px;"

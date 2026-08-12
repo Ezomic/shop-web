@@ -13,7 +13,7 @@ interface Product {
     description: string
     price: number
     price_formatted: string
-    preview_url: string | null
+    cover_url: string | null
     in_cart: boolean
 }
 
@@ -31,8 +31,8 @@ function goToCheckout() {
 <template>
     <div class="mx-auto max-w-2xl">
         <img
-            v-if="product.preview_url"
-            :src="product.preview_url"
+            v-if="product.cover_url"
+            :src="product.cover_url"
             :alt="product.name"
             class="mb-8 w-full rounded-lg object-cover"
             style="max-height: 320px;"

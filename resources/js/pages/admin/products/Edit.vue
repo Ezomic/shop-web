@@ -23,7 +23,7 @@ interface Product {
     description_nl: string
     price: number
     status: string
-    preview_url: string | null
+    cover_url: string | null
     files: ProductFile[]
 }
 
@@ -36,10 +36,14 @@ const form = useForm({
     description_nl: props.product.description_nl,
     price: props.product.price,
     status: props.product.status,
-    preview_url: props.product.preview_url ?? '',
+    cover: null as File | null,
     files: [] as File[],
     _method: 'PUT',
 })
+
+function onCover(e: Event) {
+    form.cover = (e.target as HTMLInputElement).files?.[0] ?? null
+}
 
 function formatSize(bytes: number) {
     return bytes > 1048576
@@ -107,8 +111,17 @@ function submit() {
                 </div>
             </div>
             <div>
-                <Label>Preview image URL</Label>
-                <Input v-model="form.preview_url" type="url" class="mt-1" placeholder="https://…" />
+                <Label>Cover image</Label>
+                <img
+                    v-if="product.cover_url"
+                    :src="product.cover_url"
+                    alt=""
+                    class="mb-2 rounded border"
+                    style="max-height: 160px;"
+                />
+                <Input type="file" accept="image/*" class="mt-1" @change="onCover" />
+                <p class="mt-1 text-xs text-muted-foreground">Uploading replaces the current cover.</p>
+                <p v-if="form.errors.cover" class="mt-1 text-sm text-destructive">{{ form.errors.cover }}</p>
             </div>
             <div>
                 <Label>Product files</Label>

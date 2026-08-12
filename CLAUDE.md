@@ -81,7 +81,7 @@ npm run build                # or: npm run dev
 
 | Model | Relations | Notes |
 |-------|-----------|-------|
-| `Product` | `HasMany: ProductFile`, `HasMany: OrderItem` | `spatie/laravel-translatable` on `name`, `description`; `published()` + `ordered()` scopes; `priceFormatted()` |
+| `Product` | `HasMany: ProductFile`, `HasMany: OrderItem` | `spatie/laravel-translatable` on `name`, `description`; `published()` + `ordered()` scopes; `priceFormatted()`; `cover_path` / `cover_thumb_path` on the public disk (SHOP-25, replaced `preview_url`) |
 | `ProductFile` | `BelongsTo: Product` | stored on private `shop` disk |
 | `Customer` | `HasMany: Order` | separate `customer` guard; implements `MustVerifyEmail`; `password` is **nullable** — a null one is a guest row that cannot be logged into (`isGuest()`) |
 | `Setting` | — | encrypted key/value store behind `PaymentCredentials` |
@@ -105,6 +105,7 @@ npm run build                # or: npm run dev
 - **`AllocateInvoiceNumberAction`** — hands out the next `YYYY-NNNN` invoice number. Only paid orders get one, so the sequence has no gaps; the unique index plus a retry is what makes it safe under concurrent webhooks
 - **`InvoiceRenderer`** — renders the invoice PDF on demand from the order snapshot. Invoices are never stored as files, so there is nothing extra to back up and no way for a later product edit to change an issued invoice
 - **`ResolveCheckoutCustomerAction`** — finds or creates the `Customer` a guest order belongs to. An address that already has an account gets the order attached to it, but the guest is never logged in, so typing someone else's address buys them a script rather than revealing anything
+- **`CoverStorage`** — product cover uploads, resized to a display image and a thumbnail and written as webp to the **public** disk. Sellable files stay on the private `shop` disk; nothing on the public one should ever be a paid asset (SHOP-25)
 - **`WithdrawalConsent`** — the consent wording plus a version. EU buyers of downloadable content keep a 14 day right of withdrawal unless they expressly consent to immediate supply and acknowledge losing it, so checkout refuses without the box and the order stores the exact text agreed to, not a boolean (SHOP-22)
 - **`VatThresholdMonitor`** — sums paid cross-border orders for the year and remembers which thresholds have been announced, so `shop:check-vat-threshold` warns once per threshold per year rather than every week
 - **`RefundOrderAction`** — refunds through `PaymentService` and releases the coupon use again
