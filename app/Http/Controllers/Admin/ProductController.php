@@ -46,7 +46,8 @@ class ProductController extends Controller
             'price' => ['required', 'integer', 'min:1'],
             'status' => ['required', 'in:draft,published'],
             'preview_url' => ['nullable', 'url'],
-            'file' => ['nullable', 'file', 'max:102400'],
+            'files' => ['nullable', 'array'],
+            'files.*' => ['file', 'max:102400'],
         ]);
 
         $slug = Str::slug($data['name_en']);
@@ -66,11 +67,20 @@ class ProductController extends Controller
             'sort_order' => Product::max('sort_order') + 1,
         ]);
 
-        if ($request->hasFile('file')) {
-            $this->storeFile($product, $request->file('file'));
+        foreach ($request->file('files', []) as $upload) {
+            $this->storeFile($product, $upload);
         }
 
         return redirect()->route('admin.products.index')->with('success', 'Product created.');
+    }
+
+    public function destroyFile(Product $product, ProductFile $file): RedirectResponse
+    {
+        abort_if($file->product_id !== $product->id, 404);
+
+        $this->releaseFile($file);
+
+        return back()->with('success', 'File removed.');
     }
 
     public function edit(Product $product): Response
@@ -85,7 +95,11 @@ class ProductController extends Controller
                 'price' => $product->price,
                 'status' => $product->status,
                 'preview_url' => $product->preview_url,
-                'file' => $product->files()->first()?->only('id', 'original_filename', 'size'),
+                'files' => $product->files()->get()->map(fn (ProductFile $file): array => [
+                    'id' => $file->id,
+                    'original_filename' => $file->original_filename,
+                    'size' => $file->size,
+                ])->all(),
             ],
         ]);
     }
@@ -100,7 +114,8 @@ class ProductController extends Controller
             'price' => ['required', 'integer', 'min:1'],
             'status' => ['required', 'in:draft,published'],
             'preview_url' => ['nullable', 'url'],
-            'file' => ['nullable', 'file', 'max:102400'],
+            'files' => ['nullable', 'array'],
+            'files.*' => ['file', 'max:102400'],
         ]);
 
         $product->update([
@@ -111,9 +126,10 @@ class ProductController extends Controller
             'preview_url' => $data['preview_url'] ?? null,
         ]);
 
-        if ($request->hasFile('file')) {
-            $this->releaseFiles($product);
-            $this->storeFile($product, $request->file('file'));
+        // Uploading now adds rather than replaces. Removing a file is its own explicit action,
+        // so a second upload can no longer silently take the first one away.
+        foreach ($request->file('files', []) as $upload) {
+            $this->storeFile($product, $upload);
         }
 
         return redirect()->route('admin.products.index')->with('success', 'Product updated.');
@@ -142,16 +158,19 @@ class ProductController extends Controller
      */
     private function releaseFiles(Product $product): void
     {
-        $product->files()->each(function (ProductFile $file): void {
-            if ($file->downloads()->exists()) {
-                $file->update(['product_id' => null]);
+        $product->files()->each(fn (ProductFile $file) => $this->releaseFile($file));
+    }
 
-                return;
-            }
+    private function releaseFile(ProductFile $file): void
+    {
+        if ($file->downloads()->exists()) {
+            $file->update(['product_id' => null]);
 
-            Storage::disk($file->disk)->delete($file->path);
-            $file->delete();
-        });
+            return;
+        }
+
+        Storage::disk($file->disk)->delete($file->path);
+        $file->delete();
     }
 
     private function storeFile(Product $product, UploadedFile $upload): void

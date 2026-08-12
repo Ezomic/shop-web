@@ -106,6 +106,8 @@ Route::post('admin/logout', [AdminLoginController::class, 'destroy'])->name('adm
 Route::middleware('admin')->prefix('admin')->name('admin.')->group(function (): void {
     Route::resource('products', AdminProductController::class)->except('show');
     Route::post('products/reorder', [AdminProductController::class, 'reorder'])->name('products.reorder');
+    Route::delete('products/{product}/files/{file}', [AdminProductController::class, 'destroyFile'])
+        ->name('products.files.destroy');
 
     Route::resource('orders', AdminOrderController::class)->only(['index', 'show']);
     Route::post('orders/{order}/refund', [AdminOrderController::class, 'refund'])->name('orders.refund');

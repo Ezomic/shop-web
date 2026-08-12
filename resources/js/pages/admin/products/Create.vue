@@ -17,11 +17,11 @@ const form = useForm({
     price: 0,
     status: 'draft',
     preview_url: '',
-    file: null as File | null,
+    files: [] as File[],
 })
 
 function onFile(e: Event) {
-    form.file = (e.target as HTMLInputElement).files?.[0] ?? null
+    form.files = Array.from((e.target as HTMLInputElement).files ?? [])
 }
 
 function submit() {
@@ -77,9 +77,12 @@ function submit() {
                 <Input v-model="form.preview_url" type="url" class="mt-1" placeholder="https://…" />
             </div>
             <div>
-                <Label>Product file</Label>
-                <Input type="file" class="mt-1" @change="onFile" />
-                <p v-if="form.errors.file" class="mt-1 text-sm text-destructive">{{ form.errors.file }}</p>
+                <Label>Product files</Label>
+                <Input type="file" multiple class="mt-1" @change="onFile" />
+                <p class="mt-1 text-xs text-muted-foreground">
+                    Attach as many as the product needs, for example a script plus a score.
+                </p>
+                <p v-if="form.errors.files" class="mt-1 text-sm text-destructive">{{ form.errors.files }}</p>
             </div>
             <Button type="submit" :disabled="form.processing">Create product</Button>
         </form>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AdminLayout from '@/layouts/AdminLayout.vue'
-import { useForm } from '@inertiajs/vue3'
+import { router, useForm } from '@inertiajs/vue3'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -24,7 +24,7 @@ interface Product {
     price: number
     status: string
     preview_url: string | null
-    file: ProductFile | null
+    files: ProductFile[]
 }
 
 const props = defineProps<{ product: Product }>()
@@ -37,12 +37,27 @@ const form = useForm({
     price: props.product.price,
     status: props.product.status,
     preview_url: props.product.preview_url ?? '',
-    file: null as File | null,
+    files: [] as File[],
     _method: 'PUT',
 })
 
+function formatSize(bytes: number) {
+    return bytes > 1048576
+        ? (bytes / 1048576).toFixed(1) + ' MB'
+        : Math.round(bytes / 1024) + ' KB'
+}
+
+function removeFile(file: ProductFile) {
+    if (confirm('Remove ' + file.original_filename + '?')) {
+        router.delete(
+            route('admin.products.files.destroy', { product: props.product.id, file: file.id }),
+            { preserveScroll: true },
+        )
+    }
+}
+
 function onFile(e: Event) {
-    form.file = (e.target as HTMLInputElement).files?.[0] ?? null
+    form.files = Array.from((e.target as HTMLInputElement).files ?? [])
 }
 
 function submit() {
@@ -96,11 +111,31 @@ function submit() {
                 <Input v-model="form.preview_url" type="url" class="mt-1" placeholder="https://…" />
             </div>
             <div>
-                <Label>Product file</Label>
-                <div v-if="product.file" class="mb-2 text-sm text-muted-foreground">
-                    Current: {{ product.file.original_filename }}
-                </div>
-                <Input type="file" class="mt-1" @change="onFile" />
+                <Label>Product files</Label>
+
+                <ul v-if="product.files.length" class="mb-2 space-y-1">
+                    <li
+                        v-for="file in product.files"
+                        :key="file.id"
+                        class="flex items-center justify-between rounded border px-3 py-2 text-sm"
+                    >
+                        <span>{{ file.original_filename }}</span>
+                        <span class="flex items-center gap-3 text-muted-foreground">
+                            <span class="text-xs">{{ formatSize(file.size) }}</span>
+                            <button type="button" class="text-xs underline" @click="removeFile(file)">
+                                Remove
+                            </button>
+                        </span>
+                    </li>
+                </ul>
+                <p v-else class="mb-2 text-sm text-muted-foreground">No files attached yet.</p>
+
+                <Input type="file" multiple class="mt-1" @change="onFile" />
+                <p class="mt-1 text-xs text-muted-foreground">
+                    Uploading adds to the list. Removing a file that has already been bought keeps
+                    it working for those buyers.
+                </p>
+                <p v-if="form.errors.files" class="mt-1 text-sm text-destructive">{{ form.errors.files }}</p>
             </div>
             <Button type="submit" :disabled="form.processing">Save changes</Button>
         </form>
