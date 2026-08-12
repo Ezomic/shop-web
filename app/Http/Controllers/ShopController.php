@@ -28,6 +28,7 @@ class ShopController extends Controller
                 'price' => $p->price,
                 'price_formatted' => $p->priceFormatted(),
                 'cover_url' => $this->covers->url($p->cover_thumb_path),
+                'has_sample' => $p->sample_path !== null,
                 'in_cart' => $this->cart->has($p->id),
             ]),
         ]);
@@ -46,6 +47,7 @@ class ShopController extends Controller
                 'price' => $product->price,
                 'price_formatted' => $product->priceFormatted(),
                 'cover_url' => $this->covers->url($product->cover_path),
+                'has_sample' => $product->sample_path !== null,
                 'in_cart' => $this->cart->has($product->id),
             ],
         ]);

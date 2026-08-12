@@ -14,6 +14,7 @@ interface Product {
     price: number
     price_formatted: string
     cover_url: string | null
+    has_sample: boolean
     in_cart: boolean
 }
 

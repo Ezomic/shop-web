@@ -21,6 +21,8 @@ use Spatie\Translatable\HasTranslations;
  * @property string $status
  * @property string|null $cover_path
  * @property string|null $cover_thumb_path
+ * @property string|null $sample_path
+ * @property string|null $sample_filename
  * @property int $sort_order
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at

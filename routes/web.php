@@ -19,6 +19,7 @@ use App\Http\Controllers\CustomerOrderController;
 use App\Http\Controllers\DownloadController;
 use App\Http\Controllers\LegalController;
 use App\Http\Controllers\MollieWebhookController;
+use App\Http\Controllers\SampleController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
@@ -39,6 +40,7 @@ Route::post('/locale/{locale}', function (string $locale) {
 // Public storefront
 Route::get('/', [ShopController::class, 'index'])->name('shop.index');
 Route::get('/products/{product:slug}', [ShopController::class, 'show'])->name('shop.show');
+Route::get('/products/{product:slug}/sample', [SampleController::class, 'show'])->name('shop.sample');
 
 // Cart
 Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
@@ -108,6 +110,8 @@ Route::middleware('admin')->prefix('admin')->name('admin.')->group(function (): 
     Route::post('products/reorder', [AdminProductController::class, 'reorder'])->name('products.reorder');
     Route::delete('products/{product}/files/{file}', [AdminProductController::class, 'destroyFile'])
         ->name('products.files.destroy');
+    Route::delete('products/{product}/sample', [AdminProductController::class, 'destroySample'])
+        ->name('products.sample.destroy');
 
     Route::resource('orders', AdminOrderController::class)->only(['index', 'show']);
     Route::post('orders/{order}/refund', [AdminOrderController::class, 'refund'])->name('orders.refund');
