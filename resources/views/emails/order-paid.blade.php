@@ -63,6 +63,12 @@
         @endforeach
     </ul>
 
-    <p style="color: #666; font-size: 12px; margin-top: 32px;">{{ __('mail.order_footer') }}</p>
+    @if ($order->withdrawal_consent_text)
+    <p style="color: #666; font-size: 12px; margin-top: 32px;">
+        {{ __('mail.withdrawal_confirmation', ['text' => $order->withdrawal_consent_text]) }}
+    </p>
+    @endif
+
+    <p style="color: #666; font-size: 12px; margin-top: 8px;">{{ __('mail.order_footer') }}</p>
 </body>
 </html>

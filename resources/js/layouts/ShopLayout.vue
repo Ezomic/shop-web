@@ -39,5 +39,13 @@ function resendVerification() {
         <main class="container mx-auto px-4 py-8">
             <slot />
         </main>
+
+        <footer class="mt-12 border-t">
+            <nav class="container mx-auto flex flex-wrap gap-4 px-4 py-6 text-sm text-muted-foreground">
+                <Link :href="route('legal.terms')" class="hover:underline">Terms</Link>
+                <Link :href="route('legal.privacy')" class="hover:underline">Privacy</Link>
+                <Link :href="route('legal.contact')" class="hover:underline">Contact</Link>
+            </nav>
+        </footer>
     </div>
 </template>

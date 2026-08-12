@@ -26,10 +26,11 @@ const props = defineProps<{
     total: number
     vat_rate: number
     vat_amount: number
+    withdrawal_consent_text: string
     coupon: Coupon | null
 }>()
 
-const form = useForm({ provider: 'stripe' })
+const form = useForm({ provider: 'stripe', withdrawal_consent: false })
 const couponCode = ref('')
 const couponError = ref('')
 const appliedCoupon = ref(props.coupon)
@@ -114,6 +115,20 @@ function submit() {
         </div>
 
         <form @submit.prevent="submit" class="space-y-4">
+            <div class="rounded-lg border p-3">
+                <label class="flex cursor-pointer items-start gap-3">
+                    <input
+                        type="checkbox"
+                        v-model="form.withdrawal_consent"
+                        class="mt-1 accent-primary"
+                    />
+                    <span class="text-sm">{{ withdrawal_consent_text }}</span>
+                </label>
+                <p v-if="form.errors.withdrawal_consent" class="mt-1 text-sm text-destructive">
+                    {{ form.errors.withdrawal_consent }}
+                </p>
+            </div>
+
             <div class="space-y-2">
                 <Label>Payment method</Label>
                 <label class="flex cursor-pointer items-center gap-3 rounded-lg border p-3">

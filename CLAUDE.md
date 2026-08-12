@@ -44,6 +44,7 @@ npm run build                # or: npm run dev
 | `POST /cart/apply-coupon` | `cart.coupon` | `CartController@applyCoupon` |
 | `GET /downloads/{token}` | `downloads.get` | `DownloadController@get` (signed URL) |
 | `POST /locale/{locale}` | `locale.switch` | closure |
+| `GET /terms` `GET /privacy` `GET /contact` | `legal.*` | `LegalController` |
 
 ### Auth (guest:customer)
 
@@ -99,6 +100,7 @@ npm run build                # or: npm run dev
 - **`CompleteOrderAction`** — marks order paid, increments the coupon `uses_count`, generates `Download` uuid tokens, queues `OrderPaidMail`. No-ops on an already paid order, which is what keeps webhook replays idempotent
 - **`AllocateInvoiceNumberAction`** — hands out the next `YYYY-NNNN` invoice number. Only paid orders get one, so the sequence has no gaps; the unique index plus a retry is what makes it safe under concurrent webhooks
 - **`InvoiceRenderer`** — renders the invoice PDF on demand from the order snapshot. Invoices are never stored as files, so there is nothing extra to back up and no way for a later product edit to change an issued invoice
+- **`WithdrawalConsent`** — the consent wording plus a version. EU buyers of downloadable content keep a 14 day right of withdrawal unless they expressly consent to immediate supply and acknowledge losing it, so checkout refuses without the box and the order stores the exact text agreed to, not a boolean (SHOP-22)
 - **`VatThresholdMonitor`** — sums paid cross-border orders for the year and remembers which thresholds have been announced, so `shop:check-vat-threshold` warns once per threshold per year rather than every week
 - **`RefundOrderAction`** — refunds through `PaymentService` and releases the coupon use again
 - **`ProcessDownloadAction`** — streams the `ProductFile` the `Download` points at, 404s if it is gone, increments `download_count`
