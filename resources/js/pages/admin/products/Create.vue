@@ -16,9 +16,13 @@ const form = useForm({
     description_nl: '',
     price: 0,
     status: 'draft',
-    preview_url: '',
+    cover: null as File | null,
     files: [] as File[],
 })
+
+function onCover(e: Event) {
+    form.cover = (e.target as HTMLInputElement).files?.[0] ?? null
+}
 
 function onFile(e: Event) {
     form.files = Array.from((e.target as HTMLInputElement).files ?? [])
@@ -73,8 +77,9 @@ function submit() {
                 </div>
             </div>
             <div>
-                <Label>Preview image URL</Label>
-                <Input v-model="form.preview_url" type="url" class="mt-1" placeholder="https://…" />
+                <Label>Cover image</Label>
+                <Input type="file" accept="image/*" class="mt-1" @change="onCover" />
+                <p v-if="form.errors.cover" class="mt-1 text-sm text-destructive">{{ form.errors.cover }}</p>
             </div>
             <div>
                 <Label>Product files</Label>

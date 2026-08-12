@@ -6,12 +6,16 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Services\CartService;
+use App\Services\CoverStorage;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ShopController extends Controller
 {
-    public function __construct(private readonly CartService $cart) {}
+    public function __construct(
+        private readonly CartService $cart,
+        private readonly CoverStorage $covers,
+    ) {}
 
     public function index(): Response
     {
@@ -23,7 +27,7 @@ class ShopController extends Controller
                 'description' => $p->description,
                 'price' => $p->price,
                 'price_formatted' => $p->priceFormatted(),
-                'preview_url' => $p->preview_url,
+                'cover_url' => $this->covers->url($p->cover_thumb_path),
                 'in_cart' => $this->cart->has($p->id),
             ]),
         ]);
@@ -41,7 +45,7 @@ class ShopController extends Controller
                 'description' => $product->description,
                 'price' => $product->price,
                 'price_formatted' => $product->priceFormatted(),
-                'preview_url' => $product->preview_url,
+                'cover_url' => $this->covers->url($product->cover_path),
                 'in_cart' => $this->cart->has($product->id),
             ],
         ]);

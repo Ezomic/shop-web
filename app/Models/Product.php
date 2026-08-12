@@ -19,14 +19,15 @@ use Spatie\Translatable\HasTranslations;
  * @property int $price
  * @property string $currency
  * @property string $status
- * @property string|null $preview_url
+ * @property string|null $cover_path
+ * @property string|null $cover_thumb_path
  * @property int $sort_order
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property string $name Locale-resolved via spatie/laravel-translatable
  * @property string $description Locale-resolved via spatie/laravel-translatable
  */
-#[Fillable(['slug', 'name', 'description', 'price', 'currency', 'status', 'preview_url', 'sort_order'])]
+#[Fillable(['slug', 'name', 'description', 'price', 'currency', 'status', 'sort_order'])]
 class Product extends Model
 {
     /** @use HasFactory<ProductFactory> */

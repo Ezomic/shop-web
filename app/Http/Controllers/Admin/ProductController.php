@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductFile;
+use App\Services\CoverStorage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -17,6 +18,8 @@ use Inertia\Response;
 
 class ProductController extends Controller
 {
+    public function __construct(private readonly CoverStorage $covers) {}
+
     public function index(): Response
     {
         return Inertia::render('admin/products/Index', [
@@ -45,7 +48,7 @@ class ProductController extends Controller
             'description_nl' => ['required', 'string'],
             'price' => ['required', 'integer', 'min:1'],
             'status' => ['required', 'in:draft,published'],
-            'preview_url' => ['nullable', 'url'],
+            'cover' => ['nullable', 'image', 'max:5120'],
             'files' => ['nullable', 'array'],
             'files.*' => ['file', 'max:102400'],
         ]);
@@ -63,9 +66,12 @@ class ProductController extends Controller
             'description' => ['en' => $data['description_en'], 'nl' => $data['description_nl']],
             'price' => $data['price'],
             'status' => $data['status'],
-            'preview_url' => $data['preview_url'] ?? null,
             'sort_order' => Product::max('sort_order') + 1,
         ]);
+
+        if ($request->hasFile('cover')) {
+            $this->covers->store($product, $request->file('cover'));
+        }
 
         foreach ($request->file('files', []) as $upload) {
             $this->storeFile($product, $upload);
@@ -94,7 +100,7 @@ class ProductController extends Controller
                 'description_nl' => $product->getTranslation('description', 'nl'),
                 'price' => $product->price,
                 'status' => $product->status,
-                'preview_url' => $product->preview_url,
+                'cover_url' => $this->covers->url($product->cover_path),
                 'files' => $product->files()->get()->map(fn (ProductFile $file): array => [
                     'id' => $file->id,
                     'original_filename' => $file->original_filename,
@@ -113,7 +119,7 @@ class ProductController extends Controller
             'description_nl' => ['required', 'string'],
             'price' => ['required', 'integer', 'min:1'],
             'status' => ['required', 'in:draft,published'],
-            'preview_url' => ['nullable', 'url'],
+            'cover' => ['nullable', 'image', 'max:5120'],
             'files' => ['nullable', 'array'],
             'files.*' => ['file', 'max:102400'],
         ]);
@@ -123,8 +129,11 @@ class ProductController extends Controller
             'description' => ['en' => $data['description_en'], 'nl' => $data['description_nl']],
             'price' => $data['price'],
             'status' => $data['status'],
-            'preview_url' => $data['preview_url'] ?? null,
         ]);
+
+        if ($request->hasFile('cover')) {
+            $this->covers->store($product, $request->file('cover'));
+        }
 
         // Uploading now adds rather than replaces. Removing a file is its own explicit action,
         // so a second upload can no longer silently take the first one away.
@@ -146,6 +155,7 @@ class ProductController extends Controller
         }
 
         $this->releaseFiles($product);
+        $this->covers->forget($product);
 
         $product->delete();
 

@@ -29,7 +29,8 @@ class ProductFactory extends Factory
             'price' => fake()->numberBetween(500, 9500),
             'currency' => 'EUR',
             'status' => 'published',
-            'preview_url' => null,
+            'cover_path' => null,
+            'cover_thumb_path' => null,
             'sort_order' => 0,
         ];
     }
