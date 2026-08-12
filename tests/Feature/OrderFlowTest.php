@@ -140,9 +140,12 @@ it('renders the order mail without blowing up on a product with no file', functi
         ->and($order->fresh()->isPaid())->toBeTrue();
 });
 
-it('requires a logged in customer to reach checkout', function (): void {
-    $this->get(route('checkout.index'))->assertRedirect(route('login'));
-    $this->post(route('checkout.store'), ['provider' => 'stripe', 'withdrawal_consent' => true])->assertRedirect(route('login'));
+it('lets a guest reach checkout but still guards the account area', function (): void {
+    app(CartService::class)->add(Product::factory()->create());
+
+    $this->get(route('checkout.index'))->assertOk();
+
+    $this->get(route('orders.index'))->assertRedirect(route('login'));
 });
 
 it('sends an empty cart back to the shop instead of to checkout', function (): void {

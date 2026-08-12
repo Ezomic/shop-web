@@ -108,6 +108,13 @@ it('survives a session id stripe does not recognise', function (): void {
     Mail::assertNothingQueued();
 });
 
-it('requires a logged in customer', function (): void {
-    $this->get(route('checkout.success'))->assertRedirect(route('login'));
+it('is reachable without an account and shows nothing about anyone else', function (): void {
+    $order = orderForCustomer(Customer::factory()->create());
+
+    $this->get(route('checkout.success'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->where('paid', false)->where('claimable', false));
+
+    // A stranger naming somebody else order gets nothing.
+    $this->get(route('checkout.success', ['order' => $order->id]))->assertForbidden();
 });
