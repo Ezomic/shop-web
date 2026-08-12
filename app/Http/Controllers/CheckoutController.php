@@ -6,6 +6,8 @@ namespace App\Http\Controllers;
 
 use App\Actions\CompleteOrderAction;
 use App\Actions\CreateOrderAction;
+use App\Actions\ResolveCheckoutCustomerAction;
+use App\Models\Customer;
 use App\Models\Order;
 use App\Services\CartService;
 use App\Services\PaymentService;
@@ -14,6 +16,7 @@ use App\Services\WithdrawalConsent;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -25,6 +28,7 @@ class CheckoutController extends Controller
         private readonly PaymentService $payment,
         private readonly VatCalculator $vat,
         private readonly WithdrawalConsent $consent,
+        private readonly ResolveCheckoutCustomerAction $resolveCustomer,
     ) {}
 
     public function index(): Response|RedirectResponse
@@ -46,6 +50,7 @@ class CheckoutController extends Controller
             'discount' => $totals['discount'],
             'total' => $totals['total'],
             'withdrawal_consent_text' => $this->consent->text(),
+            'isGuest' => $this->currentCustomer() === null,
             'vat_rate' => $this->vat->rate(),
             'vat_amount' => $this->vat->vatOn($totals['total']),
             'coupon' => $totals['coupon'] ? ['code' => $totals['coupon']->code] : null,
@@ -58,8 +63,13 @@ class CheckoutController extends Controller
             return redirect()->route('shop.index');
         }
 
+        $customer = $this->currentCustomer();
+
         $request->validate([
             'provider' => ['required', 'in:stripe,mollie'],
+            // Only a buyer with no session has to say who they are.
+            'email' => [$customer ? 'nullable' : 'required', 'email', 'max:255'],
+            'name' => [$customer ? 'nullable' : 'required', 'string', 'max:255'],
             // Not a formality: without this the buyer keeps a 14 day right of withdrawal even
             // after downloading. See SHOP-22.
             'withdrawal_consent' => ['accepted'],
@@ -67,8 +77,18 @@ class CheckoutController extends Controller
             'withdrawal_consent.accepted' => __('shop.withdrawal_consent_required'),
         ]);
 
-        $customer = Auth::guard('customer')->user();
+        $customer ??= $this->resolveCustomer->handle(
+            $request->string('email')->lower()->trim()->toString(),
+            $request->string('name')->trim()->toString(),
+        );
+
         $order = $this->createOrder->handle($customer, $request->string('provider')->toString(), $request->ip());
+
+        // A guest has no account to look the order up under, so the session that created it is
+        // what authorises the return pages. Nothing else is granted by it.
+        if ($this->currentCustomer() === null) {
+            $request->session()->push('guest_order_ids', $order->id);
+        }
 
         $order->forceFill([
             'withdrawal_consent_text' => $this->consent->text(),
@@ -113,8 +133,18 @@ class CheckoutController extends Controller
             }
         }
 
+        $customer = $order?->customer;
+
         return Inertia::render('checkout/Success', [
             'paid' => $order?->fresh()->isPaid() ?? false,
+            // Offered only for an order that bought under a passwordless guest row. An address
+            // that already has a real account must never be claimable this way.
+            'claimable' => $order !== null
+                && $this->currentCustomer() === null
+                && $customer !== null
+                && $customer->isGuest(),
+            'orderId' => $order?->id,
+            'email' => $customer?->email,
         ]);
     }
 
@@ -139,7 +169,44 @@ class CheckoutController extends Controller
 
     private function authorizeOrder(Request $request, Order $order): void
     {
-        abort_if($order->customer_id !== $request->user('customer')->id, 403);
+        $customer = $this->currentCustomer();
+
+        if ($customer !== null && $order->customer_id === $customer->id) {
+            return;
+        }
+
+        abort_unless(
+            in_array($order->id, $request->session()->get('guest_order_ids', []), strict: true),
+            403,
+        );
+    }
+
+    private function currentCustomer(): ?Customer
+    {
+        /** @var Customer|null $customer */
+        $customer = Auth::guard('customer')->user();
+
+        return $customer;
+    }
+
+    /**
+     * Turn the passwordless guest row into a real account by setting a password on it.
+     */
+    public function claim(Request $request, Order $order): RedirectResponse
+    {
+        $this->authorizeOrder($request, $order);
+
+        abort_unless($order->customer->isGuest(), 403);
+
+        $request->validate(['password' => ['required', 'confirmed', Password::defaults()]]);
+
+        $order->customer->forceFill([
+            'password' => $request->string('password')->toString(),
+        ])->save();
+
+        Auth::guard('customer')->login($order->customer);
+
+        return redirect()->route('orders.index')->with('success', 'Your account is ready.');
     }
 
     public function cancel(): Response

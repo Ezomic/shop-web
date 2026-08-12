@@ -53,6 +53,14 @@ Route::get('/contact', [LegalController::class, 'contact'])->name('legal.contact
 // Downloads (signed URL, no customer auth required — link is the credential)
 Route::get('/downloads/{token}', [DownloadController::class, 'get'])->name('downloads.get');
 
+// Checkout is open to guests: buying a PDF needs an email address, not an account (SHOP-21).
+Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+Route::get('/checkout/success', [CheckoutController::class, 'success'])->name('checkout.success');
+Route::get('/checkout/cancel', [CheckoutController::class, 'cancel'])->name('checkout.cancel');
+Route::get('/checkout/mollie/{order}', [CheckoutController::class, 'mollieReturn'])->name('checkout.mollie');
+Route::post('/checkout/{order}/claim', [CheckoutController::class, 'claim'])->name('checkout.claim');
+
 // Guest auth
 Route::middleware('guest:customer')->group(function (): void {
     Route::get('/register', [RegisterController::class, 'create'])->name('register');
@@ -76,12 +84,6 @@ Route::middleware('auth:customer')->group(function (): void {
     Route::post('/email/verification-notification', [VerifyEmailController::class, 'send'])
         ->middleware('throttle:6,1')
         ->name('verification.send');
-
-    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
-    Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
-    Route::get('/checkout/success', [CheckoutController::class, 'success'])->name('checkout.success');
-    Route::get('/checkout/cancel', [CheckoutController::class, 'cancel'])->name('checkout.cancel');
-    Route::get('/checkout/mollie/{order}', [CheckoutController::class, 'mollieReturn'])->name('checkout.mollie');
 
     Route::get('/orders', [CustomerOrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [CustomerOrderController::class, 'show'])->name('orders.show');

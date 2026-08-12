@@ -27,10 +27,11 @@ const props = defineProps<{
     vat_rate: number
     vat_amount: number
     withdrawal_consent_text: string
+    isGuest: boolean
     coupon: Coupon | null
 }>()
 
-const form = useForm({ provider: 'stripe', withdrawal_consent: false })
+const form = useForm({ provider: 'stripe', withdrawal_consent: false, email: '', name: '' })
 const couponCode = ref('')
 const couponError = ref('')
 const appliedCoupon = ref(props.coupon)
@@ -115,6 +116,26 @@ function submit() {
         </div>
 
         <form @submit.prevent="submit" class="space-y-4">
+            <div v-if="isGuest" class="space-y-3 rounded-lg border p-4">
+                <p class="text-sm text-muted-foreground">
+                    We send your download links here. No account needed.
+                </p>
+                <div>
+                    <Label for="name">Name</Label>
+                    <Input id="name" v-model="form.name" autocomplete="name" class="mt-1" />
+                    <p v-if="form.errors.name" class="mt-1 text-sm text-destructive">{{ form.errors.name }}</p>
+                </div>
+                <div>
+                    <Label for="email">Email</Label>
+                    <Input id="email" v-model="form.email" type="email" autocomplete="email" class="mt-1" />
+                    <p v-if="form.errors.email" class="mt-1 text-sm text-destructive">{{ form.errors.email }}</p>
+                </div>
+                <p class="text-xs text-muted-foreground">
+                    Already have an account?
+                    <a :href="route('login')" class="underline">Sign in</a> to keep this order with it.
+                </p>
+            </div>
+
             <div class="rounded-lg border p-3">
                 <label class="flex cursor-pointer items-start gap-3">
                     <input

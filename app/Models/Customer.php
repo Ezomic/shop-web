@@ -16,6 +16,7 @@ use Illuminate\Notifications\Notifiable;
  * @property int $id
  * @property string $name
  * @property string $email
+ * @property string|null $password
  */
 #[Fillable(['name', 'email', 'password'])]
 class Customer extends Authenticatable implements MustVerifyEmail
@@ -33,6 +34,14 @@ class Customer extends Authenticatable implements MustVerifyEmail
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * A guest row: holds an order and an email, cannot be logged into until a password is set.
+     */
+    public function isGuest(): bool
+    {
+        return $this->password === null;
     }
 
     /**

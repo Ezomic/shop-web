@@ -51,9 +51,13 @@ npm run build                # or: npm run dev
 `GET|POST /register`, `GET|POST /login`, `POST /logout`,
 `GET|POST /forgot-password`, `GET|POST /reset-password/{token}`
 
-### Customer area (auth:customer)
+### Checkout (public — guests can buy, SHOP-21)
 
 `GET|POST /checkout`, `GET /checkout/success`, `GET /checkout/cancel`, `GET /checkout/mollie/{order}`,
+`POST /checkout/{order}/claim`
+
+### Customer area (auth:customer)
+
 `GET /orders`, `GET /orders/{order}`, `POST /orders/{order}/downloads/{download}/reissue`,
 `GET /email/verify` (notice), `GET /email/verify/{id}/{hash}` (signed), `POST /email/verification-notification`
 
@@ -79,7 +83,7 @@ npm run build                # or: npm run dev
 |-------|-----------|-------|
 | `Product` | `HasMany: ProductFile`, `HasMany: OrderItem` | `spatie/laravel-translatable` on `name`, `description`; `published()` + `ordered()` scopes; `priceFormatted()` |
 | `ProductFile` | `BelongsTo: Product` | stored on private `shop` disk |
-| `Customer` | `HasMany: Order` | separate `customer` guard; implements `MustVerifyEmail` |
+| `Customer` | `HasMany: Order` | separate `customer` guard; implements `MustVerifyEmail`; `password` is **nullable** — a null one is a guest row that cannot be logged into (`isGuest()`) |
 | `Setting` | — | encrypted key/value store behind `PaymentCredentials` |
 | `Coupon` | `HasMany: Order` | `isValid(): bool`, `discountFor(int): int` |
 | `Order` | `BelongsTo: Customer`, `BelongsTo: Coupon`, `HasMany: OrderItem` | `isPaid(): bool`, `totalFormatted()` |
@@ -100,6 +104,7 @@ npm run build                # or: npm run dev
 - **`CompleteOrderAction`** — marks order paid, increments the coupon `uses_count`, generates `Download` uuid tokens, queues `OrderPaidMail`. No-ops on an already paid order, which is what keeps webhook replays idempotent
 - **`AllocateInvoiceNumberAction`** — hands out the next `YYYY-NNNN` invoice number. Only paid orders get one, so the sequence has no gaps; the unique index plus a retry is what makes it safe under concurrent webhooks
 - **`InvoiceRenderer`** — renders the invoice PDF on demand from the order snapshot. Invoices are never stored as files, so there is nothing extra to back up and no way for a later product edit to change an issued invoice
+- **`ResolveCheckoutCustomerAction`** — finds or creates the `Customer` a guest order belongs to. An address that already has an account gets the order attached to it, but the guest is never logged in, so typing someone else's address buys them a script rather than revealing anything
 - **`WithdrawalConsent`** — the consent wording plus a version. EU buyers of downloadable content keep a 14 day right of withdrawal unless they expressly consent to immediate supply and acknowledge losing it, so checkout refuses without the box and the order stores the exact text agreed to, not a boolean (SHOP-22)
 - **`VatThresholdMonitor`** — sums paid cross-border orders for the year and remembers which thresholds have been announced, so `shop:check-vat-threshold` warns once per threshold per year rather than every week
 - **`RefundOrderAction`** — refunds through `PaymentService` and releases the coupon use again
