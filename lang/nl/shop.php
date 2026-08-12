@@ -25,4 +25,10 @@ return [
     'order_number' => 'Bestelling #:id',
     'paid_on' => 'Betaald op :date',
     'in_cart' => 'In winkelwagen',
+    'withdrawal_consent' => 'Ik wil mijn download direct en ik begrijp dat ik mijn herroepingsrecht verlies zodra de download start.',
+    'withdrawal_consent_required' => 'Bevestig dit voordat je de aankoop afrondt.',
+    'withdrawal_heading' => 'Directe levering',
+    'terms' => 'Algemene voorwaarden',
+    'privacy' => 'Privacyverklaring',
+    'contact' => 'Contact',
 ];

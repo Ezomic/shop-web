@@ -25,4 +25,10 @@ return [
     'order_number' => 'Order #:id',
     'paid_on' => 'Paid on :date',
     'in_cart' => 'In cart',
+    'withdrawal_consent' => 'I want my download straight away and I understand that I lose my right of withdrawal once the download begins.',
+    'withdrawal_consent_required' => 'Please confirm this before completing your purchase.',
+    'withdrawal_heading' => 'Immediate delivery',
+    'terms' => 'Terms and conditions',
+    'privacy' => 'Privacy policy',
+    'contact' => 'Contact',
 ];

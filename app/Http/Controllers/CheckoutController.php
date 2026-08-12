@@ -10,6 +10,7 @@ use App\Models\Order;
 use App\Services\CartService;
 use App\Services\PaymentService;
 use App\Services\VatCalculator;
+use App\Services\WithdrawalConsent;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -23,6 +24,7 @@ class CheckoutController extends Controller
         private readonly CreateOrderAction $createOrder,
         private readonly PaymentService $payment,
         private readonly VatCalculator $vat,
+        private readonly WithdrawalConsent $consent,
     ) {}
 
     public function index(): Response|RedirectResponse
@@ -43,6 +45,7 @@ class CheckoutController extends Controller
             'subtotal' => $totals['subtotal'],
             'discount' => $totals['discount'],
             'total' => $totals['total'],
+            'withdrawal_consent_text' => $this->consent->text(),
             'vat_rate' => $this->vat->rate(),
             'vat_amount' => $this->vat->vatOn($totals['total']),
             'coupon' => $totals['coupon'] ? ['code' => $totals['coupon']->code] : null,
@@ -51,16 +54,27 @@ class CheckoutController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $request->validate([
-            'provider' => ['required', 'in:stripe,mollie'],
-        ]);
-
         if ($this->cart->count() === 0) {
             return redirect()->route('shop.index');
         }
 
+        $request->validate([
+            'provider' => ['required', 'in:stripe,mollie'],
+            // Not a formality: without this the buyer keeps a 14 day right of withdrawal even
+            // after downloading. See SHOP-22.
+            'withdrawal_consent' => ['accepted'],
+        ], [
+            'withdrawal_consent.accepted' => __('shop.withdrawal_consent_required'),
+        ]);
+
         $customer = Auth::guard('customer')->user();
         $order = $this->createOrder->handle($customer, $request->string('provider')->toString(), $request->ip());
+
+        $order->forceFill([
+            'withdrawal_consent_text' => $this->consent->text(),
+            'withdrawal_consent_version' => $this->consent->version(),
+            'withdrawal_consent_at' => now(),
+        ])->save();
 
         $url = $request->input('provider') === 'stripe'
             ? $this->payment->createStripeSession($order)

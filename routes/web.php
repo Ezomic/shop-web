@@ -17,6 +17,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CustomerOrderController;
 use App\Http\Controllers\DownloadController;
+use App\Http\Controllers\LegalController;
 use App\Http\Controllers\MollieWebhookController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\StripeWebhookController;
@@ -43,6 +44,11 @@ Route::get('/products/{product:slug}', [ShopController::class, 'show'])->name('s
 Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
 Route::post('/cart/remove', [CartController::class, 'remove'])->name('cart.remove');
 Route::post('/cart/apply-coupon', [CartController::class, 'applyCoupon'])->name('cart.coupon');
+
+// Legal pages
+Route::get('/terms', [LegalController::class, 'terms'])->name('legal.terms');
+Route::get('/privacy', [LegalController::class, 'privacy'])->name('legal.privacy');
+Route::get('/contact', [LegalController::class, 'contact'])->name('legal.contact');
 
 // Downloads (signed URL, no customer auth required — link is the credential)
 Route::get('/downloads/{token}', [DownloadController::class, 'get'])->name('downloads.get');

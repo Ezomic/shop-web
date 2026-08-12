@@ -37,7 +37,7 @@ it('records the ip address through the checkout endpoint', function (): void {
     app()->instance(PaymentService::class, $payment);
 
     $this->actingAs($customer, 'customer')
-        ->post(route('checkout.store'), ['provider' => 'stripe']);
+        ->post(route('checkout.store'), ['provider' => 'stripe', 'withdrawal_consent' => true]);
 
     expect(Order::firstOrFail()->ip_address)->not->toBeNull();
 });

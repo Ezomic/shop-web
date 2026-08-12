@@ -142,7 +142,7 @@ it('renders the order mail without blowing up on a product with no file', functi
 
 it('requires a logged in customer to reach checkout', function (): void {
     $this->get(route('checkout.index'))->assertRedirect(route('login'));
-    $this->post(route('checkout.store'), ['provider' => 'stripe'])->assertRedirect(route('login'));
+    $this->post(route('checkout.store'), ['provider' => 'stripe', 'withdrawal_consent' => true])->assertRedirect(route('login'));
 });
 
 it('sends an empty cart back to the shop instead of to checkout', function (): void {
@@ -161,8 +161,9 @@ it('sends an empty cart back to the shop instead of to checkout', function (): v
 
 it('rejects an unknown payment provider', function (): void {
     $customer = Customer::factory()->create();
+    app(CartService::class)->add(Product::factory()->create());
 
     $this->actingAs($customer, 'customer')
-        ->post(route('checkout.store'), ['provider' => 'bitcoin'])
+        ->post(route('checkout.store'), ['provider' => 'bitcoin', 'withdrawal_consent' => true])
         ->assertSessionHasErrors('provider');
 });

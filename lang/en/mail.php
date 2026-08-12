@@ -9,5 +9,6 @@ return [
     'download_links' => 'Your download links',
     'no_file_yet' => 'No file attached to this product yet. Contact us and we will sort it out.',
     'includes_vat' => 'Includes :rate% VAT',
+    'withdrawal_confirmation' => 'You confirmed at checkout: ":text"',
     'order_footer' => 'Emailed download links stay valid for a limited time. Log in to your account to get a current link at any time.',
 ];

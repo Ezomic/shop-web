@@ -21,6 +21,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $country
  * @property string|null $country_source
  * @property string|null $ip_address
+ * @property string|null $withdrawal_consent_text
+ * @property string|null $withdrawal_consent_version
+ * @property CarbonImmutable|null $withdrawal_consent_at
  * @property int $subtotal
  * @property int $discount
  * @property int $total
@@ -39,6 +42,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable([
     'customer_id', 'coupon_id', 'status', 'currency',
     'country', 'country_source', 'ip_address',
+    'withdrawal_consent_text', 'withdrawal_consent_version', 'withdrawal_consent_at',
     'subtotal', 'discount', 'total',
     'vat_rate', 'vat_amount', 'net_total',
     'payment_provider', 'payment_id', 'payment_method', 'paid_at',
@@ -51,7 +55,7 @@ class Order extends Model
 
     protected function casts(): array
     {
-        return ['paid_at' => 'datetime', 'invoiced_at' => 'datetime'];
+        return ['paid_at' => 'datetime', 'invoiced_at' => 'datetime', 'withdrawal_consent_at' => 'datetime'];
     }
 
     /**
