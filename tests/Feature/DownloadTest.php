@@ -73,7 +73,7 @@ it('404s for an unknown token', function (): void {
     $this->get(URL::signedRoute('downloads.get', ['token' => 'nope']))->assertNotFound();
 });
 
-it('keeps serving the bought file after the product file is replaced', function (): void {
+it('keeps serving the bought file after another file is added', function (): void {
     Storage::fake('shop');
 
     $admin = User::factory()->create();
@@ -94,40 +94,34 @@ it('keeps serving the bought file after the product file is replaced', function 
         'description_nl' => 'Herzien.',
         'price' => 2000,
         'status' => 'published',
-        'file' => UploadedFile::fake()->create('second.pdf', 10),
+        'files' => [UploadedFile::fake()->create('second.pdf', 10)],
     ])->assertRedirect(route('admin.products.index'));
 
     $download->refresh();
 
+    // Uploading adds rather than replaces (SHOP-24), and the bought file is untouched either way.
     expect($download->productFile)->not->toBeNull()
         ->and($download->productFile->original_filename)->toBe('first.pdf')
         ->and(Storage::disk('shop')->exists('products/first.pdf'))->toBeTrue()
-        ->and($product->fresh()->files()->count())->toBe(1)
-        ->and($product->fresh()->files()->first()->original_filename)->toBe('second.pdf');
+        ->and($product->fresh()->files()->count())->toBe(2);
 
     $this->get($download->url())->assertOk()->assertDownload('first.pdf');
 });
 
-it('deletes the old file when nobody bought it', function (): void {
+it('deletes a removed file when nobody bought it', function (): void {
     Storage::fake('shop');
 
     $admin = User::factory()->create();
     $product = Product::factory()->create();
-    ProductFile::factory()->for($product)->create(['path' => 'products/first.pdf']);
+    $file = ProductFile::factory()->for($product)->create(['path' => 'products/first.pdf']);
     Storage::disk('shop')->put('products/first.pdf', 'first draft');
 
-    $this->actingAs($admin)->put(route('admin.products.update', $product), [
-        'name_en' => 'Stage Fright',
-        'name_nl' => 'Plankenkoorts',
-        'description_en' => 'Revised.',
-        'description_nl' => 'Herzien.',
-        'price' => 2000,
-        'status' => 'published',
-        'file' => UploadedFile::fake()->create('second.pdf', 10),
-    ]);
+    $this->actingAs($admin)
+        ->delete(route('admin.products.files.destroy', ['product' => $product, 'file' => $file]))
+        ->assertRedirect();
 
     expect(Storage::disk('shop')->exists('products/first.pdf'))->toBeFalse()
-        ->and(ProductFile::count())->toBe(1);
+        ->and(ProductFile::count())->toBe(0);
 });
 
 it('refuses to delete a product that has been ordered', function (): void {

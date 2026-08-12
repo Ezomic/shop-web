@@ -70,7 +70,7 @@ npm run build                # or: npm run dev
 | What | Routes |
 |------|--------|
 | Login | `GET|POST /admin/login`, `POST /admin/logout` |
-| Products | full CRUD + `POST /admin/products/reorder` |
+| Products | full CRUD + `POST /admin/products/reorder` + `DELETE /admin/products/{product}/files/{file}` |
 | Orders | index + show + `POST /admin/orders/{order}/refund`, `POST /admin/orders/{order}/resend`, `POST /admin/orders/{order}/downloads/{download}/reissue` |
 | Coupons | full CRUD |
 | Settings | `GET|PUT /admin/settings` |
@@ -149,7 +149,8 @@ Both webhooks excluded from CSRF in `bootstrap/app.php`.
 
 Private `shop` disk (`storage/app/shop/`). Files never publicly accessible — always streamed via `ProcessDownloadAction`. Download URLs are Laravel signed routes (no expiry — permanent access).
 
-A `Download` points at the exact `ProductFile` that was bought, so replacing a product's file does
+Uploading a file **adds** to a product rather than replacing what is there (SHOP-24); removing one
+is its own explicit action. A `Download` points at the exact `ProductFile` that was bought, so replacing a product's file does
 not change what earlier buyers get (SHOP-8). Replacing a file detaches the old `ProductFile` from
 the product (`product_id` becomes null) instead of deleting it whenever a `Download` still
 references it. `order_items.product_id` is `restrictOnDelete`, so a product that has been ordered
