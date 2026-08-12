@@ -17,11 +17,16 @@ const form = useForm({
     price: 0,
     status: 'draft',
     cover: null as File | null,
+    sample: null as File | null,
     files: [] as File[],
 })
 
 function onCover(e: Event) {
     form.cover = (e.target as HTMLInputElement).files?.[0] ?? null
+}
+
+function onSample(e: Event) {
+    form.sample = (e.target as HTMLInputElement).files?.[0] ?? null
 }
 
 function onFile(e: Event) {
@@ -80,6 +85,14 @@ function submit() {
                 <Label>Cover image</Label>
                 <Input type="file" accept="image/*" class="mt-1" @change="onCover" />
                 <p v-if="form.errors.cover" class="mt-1 text-sm text-destructive">{{ form.errors.cover }}</p>
+            </div>
+            <div>
+                <Label>Sample</Label>
+                <Input type="file" class="mt-1" @change="onSample" />
+                <p class="mt-1 text-xs text-muted-foreground">
+                    Publicly downloadable, no account needed. A few pages is usually enough.
+                </p>
+                <p v-if="form.errors.sample" class="mt-1 text-sm text-destructive">{{ form.errors.sample }}</p>
             </div>
             <div>
                 <Label>Product files</Label>

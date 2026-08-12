@@ -49,6 +49,7 @@ class ProductController extends Controller
             'price' => ['required', 'integer', 'min:1'],
             'status' => ['required', 'in:draft,published'],
             'cover' => ['nullable', 'image', 'max:5120'],
+            'sample' => ['nullable', 'file', 'max:20480'],
             'files' => ['nullable', 'array'],
             'files.*' => ['file', 'max:102400'],
         ]);
@@ -73,11 +74,22 @@ class ProductController extends Controller
             $this->covers->store($product, $request->file('cover'));
         }
 
+        if ($request->hasFile('sample')) {
+            $this->storeSample($product, $request->file('sample'));
+        }
+
         foreach ($request->file('files', []) as $upload) {
             $this->storeFile($product, $upload);
         }
 
         return redirect()->route('admin.products.index')->with('success', 'Product created.');
+    }
+
+    public function destroySample(Product $product): RedirectResponse
+    {
+        $this->forgetSample($product);
+
+        return back()->with('success', 'Sample removed.');
     }
 
     public function destroyFile(Product $product, ProductFile $file): RedirectResponse
@@ -101,6 +113,7 @@ class ProductController extends Controller
                 'price' => $product->price,
                 'status' => $product->status,
                 'cover_url' => $this->covers->url($product->cover_path),
+                'sample_filename' => $product->sample_filename,
                 'files' => $product->files()->get()->map(fn (ProductFile $file): array => [
                     'id' => $file->id,
                     'original_filename' => $file->original_filename,
@@ -120,6 +133,7 @@ class ProductController extends Controller
             'price' => ['required', 'integer', 'min:1'],
             'status' => ['required', 'in:draft,published'],
             'cover' => ['nullable', 'image', 'max:5120'],
+            'sample' => ['nullable', 'file', 'max:20480'],
             'files' => ['nullable', 'array'],
             'files.*' => ['file', 'max:102400'],
         ]);
@@ -133,6 +147,10 @@ class ProductController extends Controller
 
         if ($request->hasFile('cover')) {
             $this->covers->store($product, $request->file('cover'));
+        }
+
+        if ($request->hasFile('sample')) {
+            $this->storeSample($product, $request->file('sample'));
         }
 
         // Uploading now adds rather than replaces. Removing a file is its own explicit action,
@@ -156,6 +174,7 @@ class ProductController extends Controller
 
         $this->releaseFiles($product);
         $this->covers->forget($product);
+        $this->forgetSample($product);
 
         $product->delete();
 
@@ -181,6 +200,25 @@ class ProductController extends Controller
 
         Storage::disk($file->disk)->delete($file->path);
         $file->delete();
+    }
+
+    private function storeSample(Product $product, UploadedFile $upload): void
+    {
+        $this->forgetSample($product);
+
+        $product->forceFill([
+            'sample_path' => $upload->store('samples', 'shop'),
+            'sample_filename' => $upload->getClientOriginalName(),
+        ])->save();
+    }
+
+    private function forgetSample(Product $product): void
+    {
+        if ($product->sample_path !== null) {
+            Storage::disk('shop')->delete($product->sample_path);
+        }
+
+        $product->forceFill(['sample_path' => null, 'sample_filename' => null])->save();
     }
 
     private function storeFile(Product $product, UploadedFile $upload): void

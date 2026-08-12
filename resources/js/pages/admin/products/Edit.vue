@@ -24,6 +24,7 @@ interface Product {
     price: number
     status: string
     cover_url: string | null
+    sample_filename: string | null
     files: ProductFile[]
 }
 
@@ -37,9 +38,20 @@ const form = useForm({
     price: props.product.price,
     status: props.product.status,
     cover: null as File | null,
+    sample: null as File | null,
     files: [] as File[],
     _method: 'PUT',
 })
+
+function onSample(e: Event) {
+    form.sample = (e.target as HTMLInputElement).files?.[0] ?? null
+}
+
+function removeSample() {
+    if (confirm('Remove the sample?')) {
+        router.delete(route('admin.products.sample.destroy', props.product.id), { preserveScroll: true })
+    }
+}
 
 function onCover(e: Event) {
     form.cover = (e.target as HTMLInputElement).files?.[0] ?? null
@@ -122,6 +134,16 @@ function submit() {
                 <Input type="file" accept="image/*" class="mt-1" @change="onCover" />
                 <p class="mt-1 text-xs text-muted-foreground">Uploading replaces the current cover.</p>
                 <p v-if="form.errors.cover" class="mt-1 text-sm text-destructive">{{ form.errors.cover }}</p>
+            </div>
+            <div>
+                <Label>Sample</Label>
+                <div v-if="product.sample_filename" class="mb-2 flex items-center justify-between rounded border px-3 py-2 text-sm">
+                    <span>{{ product.sample_filename }}</span>
+                    <button type="button" class="text-xs underline" @click="removeSample">Remove</button>
+                </div>
+                <p v-else class="mb-2 text-sm text-muted-foreground">No sample yet.</p>
+                <Input type="file" class="mt-1" @change="onSample" />
+                <p v-if="form.errors.sample" class="mt-1 text-sm text-destructive">{{ form.errors.sample }}</p>
             </div>
             <div>
                 <Label>Product files</Label>

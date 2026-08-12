@@ -14,6 +14,7 @@ interface Product {
     price: number
     price_formatted: string
     cover_url: string | null
+    has_sample: boolean
     in_cart: boolean
 }
 
@@ -43,6 +44,9 @@ function goToCheckout() {
             <span class="text-2xl font-bold">{{ product.price_formatted }}</span>
             <Badge v-if="product.in_cart" variant="secondary">In cart</Badge>
             <Button v-else @click="addToCart">Add to cart</Button>
+            <Button v-if="product.has_sample" variant="outline" as-child>
+                <a :href="route('shop.sample', product.slug)">Read a sample</a>
+            </Button>
             <Button v-if="product.in_cart" variant="outline" @click="goToCheckout">Checkout</Button>
         </div>
     </div>
