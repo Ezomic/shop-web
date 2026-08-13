@@ -75,6 +75,7 @@ npm run build                # or: npm run dev
 | Products | full CRUD + `POST /admin/products/reorder` + `DELETE /admin/products/{product}/files/{file}` + `DELETE /admin/products/{product}/sample` |
 | Orders | index + show + `POST /admin/orders/{order}/refund`, `POST /admin/orders/{order}/resend`, `POST /admin/orders/{order}/downloads/{download}/reissue` |
 | Coupons | full CRUD |
+| Reports | `GET /admin/reports`, `GET /admin/reports/export` (CSV) |
 | Settings | `GET|PUT /admin/settings` |
 
 ## Architecture
@@ -110,6 +111,7 @@ npm run build                # or: npm run dev
 - **`CoverStorage`** — product cover uploads, resized to a display image and a thumbnail and written as webp to the **public** disk. Sellable files stay on the private `shop` disk; nothing on the public one should ever be a paid asset (SHOP-25)
 - **`WithdrawalConsent`** — the consent wording plus a version. EU buyers of downloadable content keep a 14 day right of withdrawal unless they expressly consent to immediate supply and acknowledge losing it, so checkout refuses without the box and the order stores the exact text agreed to, not a boolean (SHOP-22)
 - **`VatThresholdMonitor`** — sums paid cross-border orders for the year and remembers which thresholds have been announced, so `shop:check-vat-threshold` warns once per threshold per year rather than every week
+- **`SalesReport`** — revenue, best sellers, the per-quarter-per-country grouping an OSS return wants, and the bookkeeping CSV. Counts **paid orders only**; refunds are reported separately rather than quietly left in the takings (SHOP-27)
 - **`FailOrderAction`** — records that a payment did not complete and mails the customer **once**, guarded by `failure_notified_at`. A paid order is left strictly alone, because a late failure webhook can land after a successful payment (SHOP-29)
 - **`RefundOrderAction`** — refunds through `PaymentService` and releases the coupon use again
 - **`ProcessDownloadAction`** — streams the `ProductFile` the `Download` points at, 404s if it is gone, increments `download_count`
