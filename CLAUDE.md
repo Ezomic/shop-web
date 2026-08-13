@@ -59,6 +59,7 @@ npm run build                # or: npm run dev
 
 ### Customer area (auth:customer)
 
+`GET|PUT /account`, `PUT /account/password`,
 `GET /orders`, `GET /orders/{order}`, `POST /orders/{order}/downloads/{download}/reissue`,
 `GET /email/verify` (notice), `GET /email/verify/{id}/{hash}` (signed), `POST /email/verification-notification`
 
