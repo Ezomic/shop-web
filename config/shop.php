@@ -55,6 +55,15 @@ return [
         'email' => env('SHOP_SUPPLIER_EMAIL', 'noreply@thijssensoftware.nl'),
     ],
 
+    'orders' => [
+
+        /*
+         * A pending order is one somebody started and never paid for. They accumulate forever
+         * otherwise. Expired orders can no longer be retried. Zero or less switches this off.
+         */
+        'expire_pending_after_days' => (int) env('SHOP_EXPIRE_PENDING_ORDERS_AFTER_DAYS', 30),
+    ],
+
     'backups' => [
 
         /*

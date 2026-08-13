@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Mail\OrderPaidMail;
+use App\Mail\OrderPaymentFailedMail;
 use App\Models\Customer;
 use App\Models\Download;
 use App\Models\Order;
@@ -46,7 +47,9 @@ it('sends a cancelled payment to the cancel page', function (): void {
     expect($order->fresh()->isPaid())->toBeFalse()
         ->and(Download::count())->toBe(0);
 
-    Mail::assertNothingQueued();
+    // The customer is told once that it did not go through (SHOP-29).
+    Mail::assertQueued(OrderPaymentFailedMail::class);
+    Mail::assertNotQueued(OrderPaidMail::class);
 });
 
 it('sends a paid payment to the success page and completes the order', function (): void {

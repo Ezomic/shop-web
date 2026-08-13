@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Mail\OrderPaymentFailedMail;
 use App\Models\Customer;
 use App\Models\Download;
 use App\Models\Order;
@@ -56,7 +57,8 @@ it('leaves the order alone when the payment is not paid', function (): void {
     expect($order->fresh()->isPaid())->toBeFalse()
         ->and(Download::count())->toBe(0);
 
-    Mail::assertNothingQueued();
+    // Not silence: the customer hears once that the payment failed (SHOP-29).
+    Mail::assertQueued(OrderPaymentFailedMail::class);
 });
 
 it('rejects a call with no payment id', function (): void {

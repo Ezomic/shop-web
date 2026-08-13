@@ -63,6 +63,7 @@ Route::get('/checkout/success', [CheckoutController::class, 'success'])->name('c
 Route::get('/checkout/cancel', [CheckoutController::class, 'cancel'])->name('checkout.cancel');
 Route::get('/checkout/mollie/{order}', [CheckoutController::class, 'mollieReturn'])->name('checkout.mollie');
 Route::post('/checkout/{order}/claim', [CheckoutController::class, 'claim'])->name('checkout.claim');
+Route::get('/checkout/{order}/retry', [CheckoutController::class, 'retry'])->name('checkout.retry');
 
 // Guest auth
 Route::middleware('guest:customer')->group(function (): void {
