@@ -25,6 +25,11 @@ function resendVerification() {
                 <div class="flex items-center gap-4">
                     <Link :href="route('checkout.index')" class="text-sm">Checkout</Link>
                     <Link :href="route('orders.index')" class="text-sm">My orders</Link>
+                    <Link
+                        v-if="page.props.auth.customer"
+                        :href="route('account.edit')"
+                        class="text-sm"
+                    >Account</Link>
                 </div>
             </nav>
         </header>
