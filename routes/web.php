@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\LoginController as AdminLoginController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
@@ -125,6 +126,9 @@ Route::middleware('admin')->prefix('admin')->name('admin.')->group(function (): 
     Route::post('orders/{order}/resend', [AdminOrderController::class, 'resend'])->name('orders.resend');
     Route::post('orders/{order}/downloads/{download}/reissue', [AdminOrderController::class, 'reissue'])
         ->name('orders.downloads.reissue');
+
+    Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('reports/export', [ReportController::class, 'export'])->name('reports.export');
 
     Route::resource('coupons', CouponController::class)->except('show');
 

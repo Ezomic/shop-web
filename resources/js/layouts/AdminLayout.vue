@@ -14,6 +14,7 @@ function logout() {
                 <Link :href="route('admin.products.index')" class="block rounded px-3 py-2 hover:bg-muted">Products</Link>
                 <Link :href="route('admin.orders.index')" class="block rounded px-3 py-2 hover:bg-muted">Orders</Link>
                 <Link :href="route('admin.coupons.index')" class="block rounded px-3 py-2 hover:bg-muted">Coupons</Link>
+                <Link :href="route('admin.reports.index')" class="block rounded px-3 py-2 hover:bg-muted">Reports</Link>
                 <Link :href="route('admin.settings.edit')" class="block rounded px-3 py-2 hover:bg-muted">Settings</Link>
                 <Link :href="route('admin.api-tokens.index')" class="block rounded px-3 py-2 hover:bg-muted">API tokens</Link>
             </nav>
