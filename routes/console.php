@@ -13,5 +13,7 @@ Artisan::command('inspire', function () {
 // Nightly, before the working day, so a bad morning still has last night's copy.
 Schedule::command('shop:backup')->dailyAt('03:20')->withoutOverlapping();
 
+Schedule::command('shop:expire-orders')->dailyAt('03:40');
+
 // Weekly is plenty: the threshold is an annual total, and the warning fires well before it bites.
 Schedule::command('shop:check-vat-threshold')->weeklyOn(1, '08:00');

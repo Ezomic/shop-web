@@ -34,6 +34,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $payment_id
  * @property string|null $payment_method
  * @property CarbonImmutable|null $paid_at
+ * @property CarbonImmutable|null $payment_failed_at
+ * @property CarbonImmutable|null $failure_notified_at
  * @property string|null $invoice_number
  * @property CarbonImmutable|null $invoiced_at
  * @property CarbonImmutable|null $created_at
@@ -55,7 +57,13 @@ class Order extends Model
 
     protected function casts(): array
     {
-        return ['paid_at' => 'datetime', 'invoiced_at' => 'datetime', 'withdrawal_consent_at' => 'datetime'];
+        return [
+            'paid_at' => 'datetime',
+            'invoiced_at' => 'datetime',
+            'withdrawal_consent_at' => 'datetime',
+            'payment_failed_at' => 'datetime',
+            'failure_notified_at' => 'datetime',
+        ];
     }
 
     /**

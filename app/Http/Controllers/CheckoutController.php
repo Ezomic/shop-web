@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\CompleteOrderAction;
 use App\Actions\CreateOrderAction;
+use App\Actions\FailOrderAction;
 use App\Actions\ResolveCheckoutCustomerAction;
 use App\Models\Customer;
 use App\Models\Order;
@@ -29,6 +30,7 @@ class CheckoutController extends Controller
         private readonly VatCalculator $vat,
         private readonly WithdrawalConsent $consent,
         private readonly ResolveCheckoutCustomerAction $resolveCustomer,
+        private readonly FailOrderAction $failOrder,
     ) {}
 
     public function index(): Response|RedirectResponse
@@ -161,6 +163,8 @@ class CheckoutController extends Controller
         }
 
         if ($status?->hasFailed() && ! $order->isPaid()) {
+            $this->failOrder->handle($order);
+
             return redirect()->route('checkout.cancel');
         }
 
@@ -187,6 +191,32 @@ class CheckoutController extends Controller
         $customer = Auth::guard('customer')->user();
 
         return $customer;
+    }
+
+    /**
+     * Pay for an order that was already created. Reached from the failure email with a signed
+     * link, or from a session that owns the order. Reuses the order rather than making a new one,
+     * so a customer trying three times leaves one row rather than three.
+     */
+    public function retry(Request $request, Order $order): RedirectResponse
+    {
+        if (! $request->hasValidSignature()) {
+            $this->authorizeOrder($request, $order);
+        }
+
+        if ($order->isPaid()) {
+            return redirect()->route('checkout.success', ['order' => $order->id]);
+        }
+
+        abort_if($order->status === 'expired', 410);
+
+        $request->session()->push('guest_order_ids', $order->id);
+
+        $url = $order->payment_provider === 'stripe'
+            ? $this->payment->createStripeSession($order)
+            : $this->payment->createMolliePayment($order);
+
+        return redirect()->away($url);
     }
 
     /**

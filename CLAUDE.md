@@ -55,7 +55,7 @@ npm run build                # or: npm run dev
 ### Checkout (public — guests can buy, SHOP-21)
 
 `GET|POST /checkout`, `GET /checkout/success`, `GET /checkout/cancel`, `GET /checkout/mollie/{order}`,
-`POST /checkout/{order}/claim`
+`POST /checkout/{order}/claim`, `GET /checkout/{order}/retry` (signed link from the failure mail)
 
 ### Customer area (auth:customer)
 
@@ -110,6 +110,7 @@ npm run build                # or: npm run dev
 - **`CoverStorage`** — product cover uploads, resized to a display image and a thumbnail and written as webp to the **public** disk. Sellable files stay on the private `shop` disk; nothing on the public one should ever be a paid asset (SHOP-25)
 - **`WithdrawalConsent`** — the consent wording plus a version. EU buyers of downloadable content keep a 14 day right of withdrawal unless they expressly consent to immediate supply and acknowledge losing it, so checkout refuses without the box and the order stores the exact text agreed to, not a boolean (SHOP-22)
 - **`VatThresholdMonitor`** — sums paid cross-border orders for the year and remembers which thresholds have been announced, so `shop:check-vat-threshold` warns once per threshold per year rather than every week
+- **`FailOrderAction`** — records that a payment did not complete and mails the customer **once**, guarded by `failure_notified_at`. A paid order is left strictly alone, because a late failure webhook can land after a successful payment (SHOP-29)
 - **`RefundOrderAction`** — refunds through `PaymentService` and releases the coupon use again
 - **`ProcessDownloadAction`** — streams the `ProductFile` the `Download` points at, 404s if it is gone, increments `download_count`
 
