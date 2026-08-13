@@ -72,6 +72,42 @@ class Product extends Model
         $query->orderBy('sort_order')->orderBy('id');
     }
 
+    /**
+     * Search the active locale only. name and description are JSON columns holding every locale
+     * (SHOP-14), so a plain LIKE would match a Dutch title while the visitor is reading English.
+     *
+     * @param  Builder<$this>  $query
+     */
+    public function scopeSearch(Builder $query, ?string $term): void
+    {
+        $term = trim((string) $term);
+
+        if ($term === '') {
+            return;
+        }
+
+        $locale = app()->getLocale();
+        $like = '%'.$term.'%';
+
+        $query->where(function (Builder $query) use ($locale, $like): void {
+            $query->where('name->'.$locale, 'like', $like)
+                ->orWhere('description->'.$locale, 'like', $like);
+        });
+    }
+
+    /**
+     * @param  Builder<$this>  $query
+     */
+    public function scopeSorted(Builder $query, ?string $sort): void
+    {
+        match ($sort) {
+            'newest' => $query->orderByDesc('created_at')->orderByDesc('id'),
+            'price_asc' => $query->orderBy('price')->orderBy('id'),
+            'price_desc' => $query->orderByDesc('price')->orderBy('id'),
+            default => $query->ordered(),
+        };
+    }
+
     public function priceFormatted(): string
     {
         return '€ '.number_format($this->price / 100, 2, ',', '.');

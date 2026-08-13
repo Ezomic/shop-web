@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import ShopLayout from '@/layouts/ShopLayout.vue'
 import { Link, router } from '@inertiajs/vue3'
+import { ref } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
 
 defineOptions({ layout: ShopLayout })
 
@@ -18,7 +20,30 @@ interface Product {
     in_cart: boolean
 }
 
-const props = defineProps<{ products: Product[] }>()
+interface Filters {
+    q: string
+    sort: string
+}
+
+const props = defineProps<{ products: Product[]; filters: Filters }>()
+
+const search = ref(props.filters.q)
+const sort = ref(props.filters.sort)
+
+// State lives in the URL so a filtered list can be linked and survives a reload.
+function apply() {
+    router.get(
+        route('shop.index'),
+        { q: search.value || undefined, sort: sort.value === 'default' ? undefined : sort.value },
+        { preserveState: true, replace: true },
+    )
+}
+
+function clear() {
+    search.value = ''
+    sort.value = 'default'
+    apply()
+}
 
 function addToCart(product: Product) {
     router.post(route('cart.add'), { product_id: product.id })
@@ -32,7 +57,36 @@ function removeFromCart(product: Product) {
 <template>
     <div>
         <h1 class="mb-8 text-3xl font-bold">Scripts</h1>
-        <div v-if="products.length === 0" class="text-muted-foreground">No products yet.</div>
+        <form class="mb-6 flex flex-wrap items-center gap-3" @submit.prevent="apply">
+            <Input
+                v-model="search"
+                type="search"
+                placeholder="Search scripts…"
+                class="max-w-xs"
+                @keyup.enter="apply"
+            />
+            <select v-model="sort" class="h-9 rounded-md border bg-background px-3 text-sm" @change="apply">
+                <option value="default">Featured</option>
+                <option value="newest">Newest</option>
+                <option value="price_asc">Price: low to high</option>
+                <option value="price_desc">Price: high to low</option>
+            </select>
+            <Button type="submit" variant="outline">Search</Button>
+            <Button
+                v-if="filters.q || filters.sort !== 'default'"
+                type="button"
+                variant="ghost"
+                @click="clear"
+            >
+                Clear
+            </Button>
+        </form>
+
+        <div v-if="products.length === 0 && filters.q" class="text-muted-foreground">
+            Nothing matches “{{ filters.q }}”. Try a different word, or
+            <button type="button" class="underline" @click="clear">show everything</button>.
+        </div>
+        <div v-else-if="products.length === 0" class="text-muted-foreground">No products yet.</div>
         <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             <div v-for="product in products" :key="product.id" class="rounded-lg border p-6">
                 <img

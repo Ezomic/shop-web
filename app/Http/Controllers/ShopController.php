@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Services\CartService;
 use App\Services\CoverStorage;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -17,10 +18,14 @@ class ShopController extends Controller
         private readonly CoverStorage $covers,
     ) {}
 
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $search = $request->string('q')->trim()->toString();
+        $sort = $request->string('sort')->toString();
+
         return Inertia::render('shop/Index', [
-            'products' => Product::published()->ordered()->get()->map(fn ($p) => [
+            'filters' => ['q' => $search, 'sort' => $sort ?: 'default'],
+            'products' => Product::published()->search($search)->sorted($sort)->get()->map(fn ($p) => [
                 'id' => $p->id,
                 'slug' => $p->slug,
                 'name' => $p->name,
