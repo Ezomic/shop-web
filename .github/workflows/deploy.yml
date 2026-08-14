@@ -37,6 +37,12 @@ jobs:
             npm ci
             npm run build
             php artisan migrate --force
+            # PHP-FPM writes uploads here as www-data. Without the group and the setgid bit the
+            # deploy user cannot manage its own storage tree (SHOP-31).
+            mkdir -p storage/app/public storage/app/shop
+            chgrp -R www-data storage/app/public storage/app/shop
+            chmod -R g+w storage/app/public storage/app/shop
+            find storage/app/public storage/app/shop -type d -exec chmod g+s {} \;
             chmod 664 database/database.sqlite database/database.sqlite-wal database/database.sqlite-shm 2>/dev/null || true
             chgrp www-data database/database.sqlite database/database.sqlite-wal database/database.sqlite-shm 2>/dev/null || true
             # setgid on database/: the scheduler runs as deploy, not www-data, so a

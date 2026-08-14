@@ -117,6 +117,9 @@ fires on a merge, so nothing happens until the steps above are done and it is ru
   WAL mode, so copying the file alone can capture a torn state missing whatever is still in the
   `-wal` sidecar.
 - `product-files-<stamp>.tar.gz` — the contents of `storage/app/shop`, which *is* the product.
+- `public-files-<stamp>.tar.gz` — the contents of `storage/app/public`, which holds the product
+  covers. Kept as a separate artefact on purpose: restoring a public cover onto the private disk,
+  or the reverse, is exactly the mistake the two-disk split exists to prevent.
 
 Anything older than `SHOP_BACKUP_KEEP_DAYS` (default 14) is pruned.
 
@@ -139,8 +142,9 @@ chgrp www-data database/database.sqlite && chmod 664 database/database.sqlite
 php artisan migrate --force          # only if the backup predates a schema change
 sudo systemctl start shop-web-queue
 
-# Product files
+# Product files (private disk) and covers (public disk) — keep them apart
 tar -xzf storage/backups/product-files-<stamp>.tar.gz -C storage/app --strip-components=0
+tar -xzf storage/backups/public-files-<stamp>.tar.gz -C storage/app --strip-components=0
 ```
 
 Verify a restore by checking the order count and that a download still streams, not just that the

@@ -77,6 +77,40 @@ it('archives the product files', function (): void {
     expect(backupFiles($this->backupPath, 'product-files'))->toHaveCount(1);
 });
 
+it('archives the public disk, where the covers live', function (): void {
+    Storage::disk('public')->put('covers/cover.webp', 'an image');
+
+    $this->artisan('shop:backup')->assertSuccessful();
+
+    expect(backupFiles($this->backupPath, 'public-files'))->toHaveCount(1);
+});
+
+it('keeps the public and private artefacts apart', function (): void {
+    Storage::disk('shop')->put('products/script.pdf', 'the script');
+    Storage::disk('public')->put('covers/cover.webp', 'an image');
+
+    $this->artisan('shop:backup')->assertSuccessful();
+
+    $private = $this->backupPath.'/'.backupFiles($this->backupPath, 'product-files')[0];
+    $public = $this->backupPath.'/'.backupFiles($this->backupPath, 'public-files')[0];
+
+    // Restoring a cover onto the private disk is the mistake the split exists to prevent, so the
+    // sellable file must never appear in the public archive and vice versa.
+    expect(shell_exec('tar -tzf '.escapeshellarg($private)))->toContain('script.pdf')->not->toContain('cover.webp');
+    expect(shell_exec('tar -tzf '.escapeshellarg($public)))->toContain('cover.webp')->not->toContain('script.pdf');
+});
+
+it('prunes stale public archives too', function (): void {
+    mkdir($this->backupPath, 0750, true);
+
+    $stale = $this->backupPath.'/public-files-20200101-000000.tar.gz';
+    touch($stale, now()->subDays(30)->getTimestamp());
+
+    $this->artisan('shop:backup', ['--keep' => 14])->assertSuccessful();
+
+    expect(file_exists($stale))->toBeFalse();
+});
+
 it('creates the backup directory when it does not exist yet', function (): void {
     expect(is_dir($this->backupPath))->toBeFalse();
 
@@ -121,13 +155,15 @@ it('keeps everything when retention is disabled', function (): void {
 it('copies each artefact to the offsite disk when one is configured', function (): void {
     Storage::fake('offsite');
     Storage::disk('shop')->put('products/script.pdf', 'the script');
+    Storage::disk('public')->put('covers/cover.webp', 'an image');
     throwawayConnection();
 
     config(['shop.backups.offsite_disk' => 'offsite']);
 
     $this->artisan('shop:backup', ['--connection' => 'backup_source'])->assertSuccessful();
 
-    expect(Storage::disk('offsite')->files('shop'))->toHaveCount(2);
+    // Database, product files and the public disk.
+    expect(Storage::disk('offsite')->files('shop'))->toHaveCount(3);
 });
 
 it('leaves nothing offsite when no disk is configured', function (): void {

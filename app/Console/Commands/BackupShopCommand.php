@@ -33,14 +33,18 @@ class BackupShopCommand extends Command
 
         try {
             $database = $this->backupDatabase($path, $stamp);
-            $files = $this->backupProductFiles($path, $stamp);
+            $files = $this->archive($path, 'product-files', $stamp, storage_path('app/shop'));
+            // Kept as its own artefact rather than folded in with the sellable files. Restoring a
+            // public cover onto the private disk, or the reverse, is exactly the mistake the two
+            // disk split exists to prevent (SHOP-31).
+            $public = $this->archive($path, 'public-files', $stamp, storage_path('app/public'));
         } catch (RuntimeException $e) {
             $this->error($e->getMessage());
 
             return self::FAILURE;
         }
 
-        foreach (array_filter([$database, $files]) as $artefact) {
+        foreach (array_filter([$database, $files, $public]) as $artefact) {
             $this->info(basename($artefact).' ('.$this->humanSize($artefact).')');
             $this->copyOffsite($artefact);
         }
@@ -79,24 +83,22 @@ class BackupShopCommand extends Command
         return $target;
     }
 
-    private function backupProductFiles(string $path, string $stamp): ?string
+    private function archive(string $path, string $name, string $stamp, string $source): ?string
     {
-        $source = storage_path('app/shop');
-
         if (! is_dir($source)) {
-            $this->warn('No product file directory to back up.');
+            $this->warn('Nothing at '.$source.' to back up.');
 
             return null;
         }
 
-        $target = $path.'/product-files-'.$stamp.'.tar.gz';
+        $target = $path.'/'.$name.'-'.$stamp.'.tar.gz';
 
         $process = new Process(['tar', '-czf', $target, '-C', dirname($source), basename($source)]);
         $process->setTimeout(1800);
         $process->run();
 
         if (! $process->isSuccessful()) {
-            throw new RuntimeException('Product file archive failed: '.$process->getErrorOutput());
+            throw new RuntimeException($name.' archive failed: '.$process->getErrorOutput());
         }
 
         return $target;
@@ -135,7 +137,7 @@ class BackupShopCommand extends Command
         $cutoff = now()->subDays($keepDays)->getTimestamp();
         $removed = 0;
 
-        foreach (glob($path.'/{database,product-files}-*', GLOB_BRACE) ?: [] as $file) {
+        foreach (glob($path.'/{database,product-files,public-files}-*', GLOB_BRACE) ?: [] as $file) {
             if (filemtime($file) < $cutoff) {
                 unlink($file);
                 $removed++;
