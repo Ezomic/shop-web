@@ -55,6 +55,27 @@ return [
         'email' => env('SHOP_SUPPLIER_EMAIL', 'noreply@thijssensoftware.nl'),
     ],
 
+    'mail' => [
+
+        /*
+         * The shared SMTP host rejects past its own cap:
+         *   554 5.7.1 End-of-data rejected: 10 emails per 5 minutes
+         *
+         * Queued mail is throttled below that so a burst is delayed rather than lost. The default
+         * leaves headroom on purpose: the cap belongs to the transport, which every other app on
+         * the droplet shares, so claiming all of it would starve them.
+         */
+        'max_per_window' => (int) env('SHOP_MAIL_MAX_PER_WINDOW', 8),
+        'window_minutes' => (int) env('SHOP_MAIL_WINDOW_MINUTES', 5),
+
+        /*
+         * How long a throttled message keeps trying before it is given up on. Deliberately long:
+         * an order email is how a paying customer receives their download links, so late is very
+         * much better than never.
+         */
+        'retry_for_hours' => (int) env('SHOP_MAIL_RETRY_FOR_HOURS', 6),
+    ],
+
     'orders' => [
 
         /*

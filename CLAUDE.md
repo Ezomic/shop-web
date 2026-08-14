@@ -20,6 +20,12 @@ allow re-downloading purchases. Admins manage products, orders, coupons, and set
 
 Site runs under **Herd** at `shop.test`. No `php artisan serve` needed.
 
+All shop mail is **throttled** to stay under the SMTP host's own cap, which rejects past 10 per 5
+minutes with a 554 (SHOP-32). `App\Mail\Concerns\Throttled` attaches a `RateLimited('mail')`
+middleware and retries against a deadline rather than a count, because every throttled release
+burns an attempt. A permanently failed job is logged at error level so a download link that never
+arrived cannot pass unnoticed.
+
 `OrderPaidMail` is **queued**, so a local run needs `php artisan queue:work` (or `composer dev`,
 which starts one) before order emails go anywhere. In production this is a systemd unit named
 `shop-web-queue`; without it customers never receive their download links.

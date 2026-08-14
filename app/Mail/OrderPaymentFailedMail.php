@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Mail;
 
+use App\Mail\Concerns\Throttled;
 use App\Models\Order;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -15,7 +16,7 @@ use Illuminate\Support\Facades\URL;
 
 class OrderPaymentFailedMail extends Mailable implements ShouldQueue
 {
-    use Queueable, SerializesModels;
+    use Queueable, SerializesModels, Throttled;
 
     public function __construct(public readonly Order $order) {}
 
