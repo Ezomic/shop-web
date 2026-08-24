@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d9787a0302d071503a15a10cd881605f",
+    "content-hash": "39d6c0c4aa0980f8d3b31b237be81962",
     "packages": [
         {
             "name": "barryvdh/laravel-dompdf",
@@ -7135,16 +7135,16 @@
         },
         {
             "name": "thijssensoftware/flare-client",
-            "version": "0.1.0",
+            "version": "0.3.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Ezomic/flare-client.git",
-                "reference": "7984940a9d13db81e77b37dc67d41fa3e2d5d653"
+                "reference": "bd766d6240f4e89b03294b6002f884699bdc6861"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Ezomic/flare-client/zipball/7984940a9d13db81e77b37dc67d41fa3e2d5d653",
-                "reference": "7984940a9d13db81e77b37dc67d41fa3e2d5d653",
+                "url": "https://api.github.com/repos/Ezomic/flare-client/zipball/bd766d6240f4e89b03294b6002f884699bdc6861",
+                "reference": "bd766d6240f4e89b03294b6002f884699bdc6861",
                 "shasum": ""
             },
             "require": {
@@ -7156,6 +7156,7 @@
                 "thijssensoftware/request-id": "^0.1.0"
             },
             "require-dev": {
+                "larastan/larastan": "^3.9",
                 "laravel/pint": "^1.0",
                 "orchestra/testbench": "^9.0|^10.0|^11.0",
                 "pestphp/pest": "^3.0|^4.0"
@@ -7182,8 +7183,22 @@
                 "test": [
                     "pest"
                 ],
+                "test:coverage": [
+                    "pest --coverage --min=100"
+                ],
                 "lint": [
                     "pint"
+                ],
+                "lint:check": [
+                    "pint --test"
+                ],
+                "types:check": [
+                    "phpstan analyse --memory-limit=512M"
+                ],
+                "ci:check": [
+                    "@lint:check",
+                    "@types:check",
+                    "@test"
                 ]
             },
             "license": [
@@ -7191,10 +7206,10 @@
             ],
             "description": "Reports exceptions, failed jobs and failed scheduled tasks to flare.",
             "support": {
-                "source": "https://github.com/Ezomic/flare-client/tree/0.1.0",
+                "source": "https://github.com/Ezomic/flare-client/tree/0.3.4",
                 "issues": "https://github.com/Ezomic/flare-client/issues"
             },
-            "time": "2026-08-01T21:01:48+00:00"
+            "time": "2026-08-13T15:48:31+00:00"
         },
         {
             "name": "thijssensoftware/request-id",
