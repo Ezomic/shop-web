@@ -9,7 +9,6 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.4",
         "barryvdh/laravel-dompdf": "^3.1",
         "inertiajs/inertia-laravel": "^3.1",
         "intervention/image": "^4.1",
@@ -17,9 +16,11 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^3.0",
         "mollie/laravel-mollie": "^4.1",
+        "php": "^8.4",
         "spatie/laravel-translatable": "^6.14",
         "stripe/stripe-php": "^20.3",
         "thijssensoftware/flare-client": "^0.3.4",
+        "thijssensoftware/snag-client": "^0.1.0",
         "tightenco/ziggy": "^2.6"
     },
     "require-dev": {
@@ -120,6 +121,10 @@
         {
             "type": "vcs",
             "url": "https://github.com/Ezomic/request-id.git"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/Ezomic/snag-client.git"
         }
     ]
 }
