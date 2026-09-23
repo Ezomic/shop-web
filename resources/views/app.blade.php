@@ -13,5 +13,8 @@
 </head>
 <body class="antialiased">
     @inertia
+
+    {{-- Renders nothing unless snag is configured and someone is signed in. --}}
+    @snag
 </body>
 </html>
