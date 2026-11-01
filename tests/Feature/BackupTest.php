@@ -181,3 +181,17 @@ it('is scheduled to run nightly', function (): void {
     expect($events)->toHaveCount(1)
         ->and($events->first()->expression)->toBe('20 3 * * *');
 });
+
+it('creates shop disk directories the scheduler group can read', function (): void {
+    $root = storage_path('framework/testing/shop-perms-'.uniqid());
+    config(['filesystems.disks.shop.root' => $root]);
+    app('filesystem')->forgetDisk('shop');
+
+    Storage::disk('shop')->put('products/file.zip', 'x');
+
+    expect(fileperms($root.'/products') & 0050)->toBe(0050)
+        ->and(fileperms($root.'/products/file.zip') & 0040)->toBe(0040)
+        ->and(fileperms($root.'/products') & 0007)->toBe(0);
+
+    File::deleteDirectory($root);
+});
