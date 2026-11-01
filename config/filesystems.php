@@ -53,6 +53,10 @@ return [
             'driver' => 'local',
             'root' => storage_path('app/shop'),
             'throw' => false,
+            'permissions' => [
+                'file' => ['public' => 0664, 'private' => 0660],
+                'dir' => ['public' => 0775, 'private' => 0770],
+            ],
         ],
 
         's3' => [
